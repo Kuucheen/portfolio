@@ -1,0 +1,216 @@
+---
+interface Props {
+	art: string;
+	atlasSrc: string;
+	label: string;
+	id?: string;
+	cellSize?: number;
+	atlasColumns?: number;
+}
+
+const {
+	art,
+	atlasSrc,
+	label,
+	id,
+	cellSize = 16,
+	atlasColumns = 16,
+} = Astro.props;
+
+const lines = art.replace(/\r/g, '').split('\n');
+if (lines.at(-1) === '') lines.pop();
+
+const columns = Math.max(0, ...lines.map((line) => Array.from(line).length));
+const rows = lines.length;
+---
+
+<figure
+	id={id}
+	class="ascii-canvas"
+	data-ascii-canvas
+	data-atlas-src={atlasSrc}
+	data-cell-size={cellSize}
+	data-atlas-columns={atlasColumns}
+>
+	<canvas
+		width={columns * cellSize}
+		height={rows * cellSize}
+		role="img"
+		aria-label={label}
+	></canvas>
+	<pre class="fallback" hidden aria-hidden="true">{art}</pre>
+	<script type="application/json" class="source" set:html={JSON.stringify(art)}></script>
+</figure>
+
+<script>
+	interface Glyph {
+		code: number;
+		x: number;
+		y: number;
+	}
+
+	function loadImage(src: string): Promise<HTMLImageElement> {
+		return new Promise((resolve, reject) => {
+			const image = new Image();
+			image.addEventListener('load', () => resolve(image), { once: true });
+			image.addEventListener('error', () => reject(new Error(`Could not load ${src}`)), {
+				once: true,
+			});
+			image.src = src;
+		});
+	}
+
+	function makeMask(atlas: HTMLImageElement): HTMLCanvasElement {
+		const mask = document.createElement('canvas');
+		mask.width = atlas.naturalWidth;
+		mask.height = atlas.naturalHeight;
+		const context = mask.getContext('2d', { willReadFrequently: true });
+		if (!context) return mask;
+
+		context.drawImage(atlas, 0, 0);
+		const pixels = context.getImageData(0, 0, mask.width, mask.height);
+		const [keyR, keyG, keyB] = pixels.data;
+
+		for (let index = 0; index < pixels.data.length; index += 4) {
+			const r = pixels.data[index];
+			const g = pixels.data[index + 1];
+			const b = pixels.data[index + 2];
+			const originalAlpha = pixels.data[index + 3];
+			const isBackground = r === keyR && g === keyG && b === keyB;
+
+			pixels.data[index] = 255;
+			pixels.data[index + 1] = 255;
+			pixels.data[index + 2] = 255;
+			pixels.data[index + 3] = isBackground
+				? 0
+				: Math.round((Math.max(r, g, b) / 255) * originalAlpha);
+		}
+
+		context.clearRect(0, 0, mask.width, mask.height);
+		context.putImageData(pixels, 0, 0);
+		return mask;
+	}
+
+	async function initializeAsciiCanvas(element: HTMLElement): Promise<void> {
+		if (element.dataset.initialized === 'true') return;
+		element.dataset.initialized = 'true';
+
+		const canvas = element.querySelector('canvas');
+		const fallback = element.querySelector<HTMLPreElement>('.fallback');
+		const source = element.querySelector<HTMLScriptElement>('.source');
+		if (!(canvas instanceof HTMLCanvasElement) || !source) return;
+
+		const context = canvas.getContext('2d');
+		if (!context) return;
+
+		const atlasSrc = element.dataset.atlasSrc;
+		const cellSize = Number(element.dataset.cellSize ?? 16);
+		const atlasColumns = Number(element.dataset.atlasColumns ?? 16);
+		if (!atlasSrc) return;
+
+		let art: string;
+		try {
+			art = JSON.parse(source.textContent ?? '""');
+		} catch {
+			return;
+		}
+
+		let atlas: HTMLImageElement;
+		try {
+			atlas = await loadImage(atlasSrc);
+		} catch (error) {
+			canvas.hidden = true;
+			if (fallback) fallback.hidden = false;
+			console.error(error);
+			return;
+		}
+
+		const mask = makeMask(atlas);
+		const tintedAtlas = document.createElement('canvas');
+		tintedAtlas.width = mask.width;
+		tintedAtlas.height = mask.height;
+		const tintContext = tintedAtlas.getContext('2d');
+		if (!tintContext) return;
+
+		const glyphs: Glyph[] = [];
+		const lines = art.replace(/\r/g, '').split('\n');
+		for (let y = 0; y < lines.length; y += 1) {
+			const characters = Array.from(lines[y]);
+			for (let x = 0; x < characters.length; x += 1) {
+				const character = characters[x];
+				if (character === ' ' || character === '\u00a0') continue;
+
+				const code = character.codePointAt(0);
+				if (code !== undefined && code <= 255) glyphs.push({ code, x, y });
+			}
+		}
+
+		context.imageSmoothingEnabled = false;
+		tintContext.imageSmoothingEnabled = false;
+
+		function render(color: string): void {
+			tintContext.clearRect(0, 0, tintedAtlas.width, tintedAtlas.height);
+			tintContext.globalCompositeOperation = 'source-over';
+			tintContext.drawImage(mask, 0, 0);
+			tintContext.globalCompositeOperation = 'source-in';
+			tintContext.fillStyle = color;
+			tintContext.fillRect(0, 0, tintedAtlas.width, tintedAtlas.height);
+			tintContext.globalCompositeOperation = 'source-over';
+
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			for (const glyph of glyphs) {
+				const sourceX = (glyph.code % atlasColumns) * cellSize;
+				const sourceY = Math.floor(glyph.code / atlasColumns) * cellSize;
+				context.drawImage(
+					tintedAtlas,
+					sourceX,
+					sourceY,
+					cellSize,
+					cellSize,
+					glyph.x * cellSize,
+					glyph.y * cellSize,
+					cellSize,
+					cellSize,
+				);
+			}
+		}
+
+		const color = getComputedStyle(element).getPropertyValue('--text-white').trim() || '#ffffff';
+		render(color);
+	}
+
+	function initializeAllAsciiCanvases(): void {
+		document.querySelectorAll<HTMLElement>('[data-ascii-canvas]').forEach((element) => {
+			void initializeAsciiCanvas(element);
+		});
+	}
+
+	initializeAllAsciiCanvases();
+	document.addEventListener('astro:page-load', initializeAllAsciiCanvases);
+</script>
+
+<style>
+	.ascii-canvas {
+		width: fit-content;
+		max-width: 100%;
+		margin: 0 auto;
+		overflow: auto hidden;
+	}
+
+	canvas {
+		display: block;
+		max-width: none;
+		height: auto;
+		image-rendering: pixelated;
+	}
+
+	.fallback {
+		margin: 0;
+		font: 16px/1 monospace;
+		white-space: pre;
+	}
+
+	.source {
+		display: none;
+	}
+</style>

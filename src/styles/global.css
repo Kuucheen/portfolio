@@ -3,31 +3,47 @@
   https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
   License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
  */
+@import "tailwindcss";
+
+@theme inline {
+	--color-accent: var(--accent);
+}
+@theme inline {
+	--font-display: var(--font-cooper);
+}
 
 :root {
-	--accent: #2337ff;
-	--accent-dark: #000d8a;
+	--accent: #ff3c47;
+	--accent-dark: #a5282f;
 	--black: 15, 18, 25;
-	--gray: 96, 115, 159;
-	--gray-light: 229, 233, 240;
-	--gray-dark: 34, 41, 57;
-	--gray-gradient: rgba(var(--gray-light), 50%), #fff;
+	--gray: #1b1b15;
+	--gray-light: #5c5b5b;
+	--gray-primary: #0A0908;
+	--pure-white: #ffffff;
+	--text-white: #f1eee9;
+	--text-white-secondary: #d3d0cd;
 	--box-shadow:
-		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
-		0 16px 32px rgba(var(--gray), 33%);
+			0 2px 6px var(--gray), 0 8px 24px var(--gray),
+			0 16px 32px var(--gray);
+
+	color-scheme: dark;
+}
+html {
+	background: var(--gray-primary);
+	min-height: 100%;
 }
 body {
 	font-family: var(--font-atkinson);
 	margin: 0;
 	padding: 0;
 	text-align: left;
-	background: linear-gradient(var(--gray-gradient)) no-repeat;
-	background-size: 100% 600px;
+	background: var(--gray-primary);
 	word-wrap: break-word;
 	overflow-wrap: break-word;
-	color: rgb(var(--gray-dark));
+	color: var(--text-white);
 	font-size: 20px;
 	line-height: 1.7;
+	min-height: 100vh;
 }
 main {
 	width: 720px;
@@ -42,7 +58,7 @@ h4,
 h5,
 h6 {
 	margin: 0 0 0.5rem 0;
-	color: rgb(var(--black));
+	color: var(--text-white);
 	line-height: 1.2;
 }
 h1 {
@@ -93,7 +109,7 @@ img {
 }
 code {
 	padding: 2px 5px;
-	background-color: rgb(var(--gray-light));
+	background-color: var(--gray-light);
 	border-radius: 2px;
 }
 pre {
@@ -111,7 +127,7 @@ blockquote {
 }
 hr {
 	border: none;
-	border-top: 1px solid rgb(var(--gray-light));
+	border-top: 1px solid var(--gray-light);
 }
 @media (max-width: 720px) {
 	body {
@@ -138,4 +154,12 @@ hr {
 	clip-path: inset(50%);
 	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
+}
+::selection {
+	color: var(--text-white);
+	background-color: var(--accent);
+}
+::-moz-selection {
+	color: var(--text-white);
+	background-color: var(--accent);
 }
