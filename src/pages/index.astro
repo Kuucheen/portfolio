@@ -30,6 +30,11 @@ import artwork from '../assets/ascii/ear.txt?raw';
 				margin: 0;
 			}
 
+			.hero-art :global(.ascii-canvas) {
+				margin: 0;
+				overflow: hidden;
+			}
+
 			.content {
 				width: min(720px, calc(100% - 2rem));
 				margin-inline: auto;
@@ -49,8 +54,23 @@ import artwork from '../assets/ascii/ear.txt?raw';
 	<body class="home-page">
 		<Header />
 		<main class="home">
-			<section class="hero text-3xl">
-				<h1 class="font-display font-medium">
+			<section
+				class="hero text-3xl"
+				style="position: relative; isolation: isolate; overflow: hidden;"
+			>
+				<div
+					class="hero-art"
+					aria-hidden="true"
+					style="position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; overflow: hidden; opacity: 0.28; pointer-events: none;"
+				>
+					<AsciiArtCanvas
+						id="ascii-art"
+						art={artwork}
+						atlasSrc="/fonts/cp437_16x16.png"
+						label="ASCII artwork of an ear"
+					/>
+				</div>
+				<h1 class="font-display font-medium" style="position: relative; z-index: 1;">
 					k
 					<span class="italic text-accent">u</span>
 					ch
@@ -58,13 +78,6 @@ import artwork from '../assets/ascii/ear.txt?raw';
 					n
 				</h1>
 			</section>
-
-			<AsciiArtCanvas
-				id="ascii-art"
-				art={artwork}
-				atlasSrc="/fonts/cp437_16x16.png"
-				label="ASCII artwork of an ear"
-			/>
 			<div class="content">
 
 

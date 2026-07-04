@@ -20,8 +20,27 @@ const {
 const lines = art.replace(/\r/g, '').split('\n');
 if (lines.at(-1) === '') lines.pop();
 
-const columns = Math.max(0, ...lines.map((line) => Array.from(line).length));
-const rows = lines.length;
+let minX = Number.POSITIVE_INFINITY;
+let minY = Number.POSITIVE_INFINITY;
+let maxX = Number.NEGATIVE_INFINITY;
+let maxY = Number.NEGATIVE_INFINITY;
+
+for (let y = 0; y < lines.length; y += 1) {
+	const characters = Array.from(lines[y]);
+	for (let x = 0; x < characters.length; x += 1) {
+		if (characters[x] === ' ' || characters[x] === '\u00a0') continue;
+		minX = Math.min(minX, x);
+		minY = Math.min(minY, y);
+		maxX = Math.max(maxX, x);
+		maxY = Math.max(maxY, y);
+	}
+}
+
+const hasVisibleGlyphs = Number.isFinite(minX);
+const offsetX = hasVisibleGlyphs ? minX : 0;
+const offsetY = hasVisibleGlyphs ? minY : 0;
+const columns = hasVisibleGlyphs ? maxX - minX + 1 : 0;
+const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 ---
 
 <figure
@@ -31,6 +50,8 @@ const rows = lines.length;
 	data-atlas-src={atlasSrc}
 	data-cell-size={cellSize}
 	data-atlas-columns={atlasColumns}
+	data-offset-x={offsetX}
+	data-offset-y={offsetY}
 >
 	<canvas
 		width={columns * cellSize}
@@ -106,6 +127,8 @@ const rows = lines.length;
 		const atlasSrc = element.dataset.atlasSrc;
 		const cellSize = Number(element.dataset.cellSize ?? 16);
 		const atlasColumns = Number(element.dataset.atlasColumns ?? 16);
+		const offsetX = Number(element.dataset.offsetX ?? 0);
+		const offsetY = Number(element.dataset.offsetY ?? 0);
 		if (!atlasSrc) return;
 
 		let art: string;
@@ -141,7 +164,9 @@ const rows = lines.length;
 				if (character === ' ' || character === '\u00a0') continue;
 
 				const code = character.codePointAt(0);
-				if (code !== undefined && code <= 255) glyphs.push({ code, x, y });
+				if (code !== undefined && code <= 255) {
+					glyphs.push({ code, x: x - offsetX, y: y - offsetY });
+				}
 			}
 		}
 
