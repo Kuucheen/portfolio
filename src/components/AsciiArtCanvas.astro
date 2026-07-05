@@ -6,6 +6,10 @@ interface Props {
 	id?: string;
 	cellSize?: number;
 	atlasColumns?: number;
+	animated?: boolean;
+	ascentWeights?: Partial<{ left: number; straight: number; right: number }>;
+	topWeights?: Partial<{ up: number; straight: number; down: number }>;
+	descentWeights?: Partial<{ left: number; straight: number; right: number }>;
 }
 
 const {
@@ -15,7 +19,15 @@ const {
 	id,
 	cellSize = 16,
 	atlasColumns = 16,
+	animated = false,
+	ascentWeights = {},
+	topWeights = {},
+	descentWeights = {},
 } = Astro.props;
+
+const resolvedAscentWeights = { left: 1, straight: 1, right: 1, ...ascentWeights };
+const resolvedTopWeights = { up: 1, straight: 1, down: 1, ...topWeights };
+const resolvedDescentWeights = { left: 1, straight: 1, right: 1, ...descentWeights };
 
 const lines = art.replace(/\r/g, '').split('\n');
 if (lines.at(-1) === '') lines.pop();
@@ -52,6 +64,16 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 	data-atlas-columns={atlasColumns}
 	data-offset-x={offsetX}
 	data-offset-y={offsetY}
+	data-animated={animated}
+	data-ascent-left-weight={resolvedAscentWeights.left}
+	data-ascent-straight-weight={resolvedAscentWeights.straight}
+	data-ascent-right-weight={resolvedAscentWeights.right}
+	data-top-up-weight={resolvedTopWeights.up}
+	data-top-straight-weight={resolvedTopWeights.straight}
+	data-top-down-weight={resolvedTopWeights.down}
+	data-descent-left-weight={resolvedDescentWeights.left}
+	data-descent-straight-weight={resolvedDescentWeights.straight}
+	data-descent-right-weight={resolvedDescentWeights.right}
 >
 	<canvas
 		width={columns * cellSize}
@@ -66,9 +88,35 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 <script>
 	interface Glyph {
 		code: number;
+		character: string;
 		x: number;
 		y: number;
 	}
+
+	interface Point {
+		x: number;
+		y: number;
+	}
+
+	interface LightningGlyph extends Point {
+		code: number;
+		createdAt: number;
+		rotation: number;
+		scaleX: number;
+		scaleY: number;
+	}
+
+	interface WeightedGlyph {
+		glyph: Glyph;
+		weight: number;
+	}
+
+	type Phase = 'up' | 'right' | 'down' | 'bottom' | 'lightning';
+
+	const TICK_MS = 200;
+	const FAST_TICK_MS = TICK_MS / 2;
+	const TRAIL_DURATION_MS = TICK_MS * 9;
+	const LIGHTNING_GLYPHS = ['/','\\','|','-','+','*'];
 
 	function loadImage(src: string): Promise<HTMLImageElement> {
 		return new Promise((resolve, reject) => {
@@ -149,13 +197,8 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		}
 
 		const mask = makeMask(atlas);
-		const tintedAtlas = document.createElement('canvas');
-		tintedAtlas.width = mask.width;
-		tintedAtlas.height = mask.height;
-		const tintContext = tintedAtlas.getContext('2d');
-		if (!tintContext) return;
-
 		const glyphs: Glyph[] = [];
+		const glyphGrid = new Map<string, Glyph>();
 		const lines = art.replace(/\r/g, '').split('\n');
 		for (let y = 0; y < lines.length; y += 1) {
 			const characters = Array.from(lines[y]);
@@ -165,43 +208,404 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 
 				const code = character.codePointAt(0);
 				if (code !== undefined && code <= 255) {
-					glyphs.push({ code, x: x - offsetX, y: y - offsetY });
+					const glyph = { code, character, x: x - offsetX, y: y - offsetY };
+					glyphs.push(glyph);
+					glyphGrid.set(`${glyph.x},${glyph.y}`, glyph);
 				}
 			}
 		}
 
 		context.imageSmoothingEnabled = false;
-		tintContext.imageSmoothingEnabled = false;
 
-		function render(color: string): void {
-			tintContext.clearRect(0, 0, tintedAtlas.width, tintedAtlas.height);
-			tintContext.globalCompositeOperation = 'source-over';
-			tintContext.drawImage(mask, 0, 0);
-			tintContext.globalCompositeOperation = 'source-in';
-			tintContext.fillStyle = color;
-			tintContext.fillRect(0, 0, tintedAtlas.width, tintedAtlas.height);
-			tintContext.globalCompositeOperation = 'source-over';
+		function makeTintedAtlas(color: string): HTMLCanvasElement {
+			const tinted = document.createElement('canvas');
+			tinted.width = mask.width;
+			tinted.height = mask.height;
+			const tintedContext = tinted.getContext('2d');
+			if (!tintedContext) return tinted;
+			tintedContext.imageSmoothingEnabled = false;
+			tintedContext.drawImage(mask, 0, 0);
+			tintedContext.globalCompositeOperation = 'source-in';
+			tintedContext.fillStyle = color;
+			tintedContext.fillRect(0, 0, tinted.width, tinted.height);
+			return tinted;
+		}
 
+		function drawGlyph(
+			atlasImage: HTMLCanvasElement,
+			code: number,
+			x: number,
+			y: number,
+		): void {
+			const sourceX = (code % atlasColumns) * cellSize;
+			const sourceY = Math.floor(code / atlasColumns) * cellSize;
+			context.drawImage(
+				atlasImage,
+				sourceX,
+				sourceY,
+				cellSize,
+				cellSize,
+				x * cellSize,
+				y * cellSize,
+				cellSize,
+				cellSize,
+			);
+		}
+
+		const styles = getComputedStyle(element);
+		const baseColor = styles.getPropertyValue('--text-white').trim() || '#ffffff';
+		const accentColor = styles.getPropertyValue('--accent-blue-dark').trim() || '#2832a5';
+		const baseAtlas = makeTintedAtlas(baseColor);
+		const accentAtlas = makeTintedAtlas(accentColor);
+
+		function renderStatic(): void {
 			context.clearRect(0, 0, canvas.width, canvas.height);
 			for (const glyph of glyphs) {
-				const sourceX = (glyph.code % atlasColumns) * cellSize;
-				const sourceY = Math.floor(glyph.code / atlasColumns) * cellSize;
-				context.drawImage(
-					tintedAtlas,
-					sourceX,
-					sourceY,
-					cellSize,
-					cellSize,
-					glyph.x * cellSize,
-					glyph.y * cellSize,
-					cellSize,
-					cellSize,
-				);
+				drawGlyph(baseAtlas, glyph.code, glyph.x, glyph.y);
 			}
 		}
 
-		const color = getComputedStyle(element).getPropertyValue('--text-white').trim() || '#ffffff';
-		render(color);
+		const shouldAnimate = element.dataset.animated === 'true';
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (!shouldAnimate || reducedMotion || canvas.width === 0 || canvas.height === 0) {
+			renderStatic();
+			return;
+		}
+
+		const columns = Math.floor(canvas.width / cellSize);
+		const rows = Math.floor(canvas.height / cellSize);
+		const maxX = columns - 1;
+		const maxY = rows - 1;
+		const glyphsByRow = new Map<number, Glyph[]>();
+		const glyphsByColumn = new Map<number, Glyph[]>();
+		for (const glyph of glyphs) {
+			glyphsByRow.set(glyph.y, [...(glyphsByRow.get(glyph.y) ?? []), glyph]);
+			glyphsByColumn.set(glyph.x, [...(glyphsByColumn.get(glyph.x) ?? []), glyph]);
+		}
+		const bottomGlyphs = glyphsByRow.get(maxY) ?? [];
+		const bottomLeft = bottomGlyphs.reduce(
+			(leftmost, glyph) => glyph.x < leftmost.x ? glyph : leftmost,
+			bottomGlyphs[0],
+		);
+		const bottomRight = bottomGlyphs.reduce(
+			(rightmost, glyph) => glyph.x > rightmost.x ? glyph : rightmost,
+			bottomGlyphs[0],
+		);
+		let bottomLeftIslandMaxX = bottomLeft.x;
+		while (glyphGrid.has(`${bottomLeftIslandMaxX + 1},${maxY}`)) bottomLeftIslandMaxX += 1;
+		const bottomLeftIslandGlyphs = bottomGlyphs.filter(
+			(glyph) => glyph.x >= bottomLeft.x && glyph.x <= bottomLeftIslandMaxX,
+		);
+		let bottomRightIslandMinX = bottomRight.x;
+		while (glyphGrid.has(`${bottomRightIslandMinX - 1},${maxY}`)) bottomRightIslandMinX -= 1;
+
+		function pointKey(point: Point): string {
+			return `${point.x},${point.y}`;
+		}
+
+		const downReachable = new Set(
+			bottomGlyphs
+				.filter((glyph) => glyph.x >= bottomRightIslandMinX)
+				.map(pointKey),
+		);
+		for (let y = maxY - 1; y >= 0; y -= 1) {
+			for (const glyph of glyphsByRow.get(y) ?? []) {
+				if ([-1, 0, 1].some((offset) => downReachable.has(`${glyph.x + offset},${y + 1}`))) {
+					downReachable.add(pointKey(glyph));
+				}
+			}
+		}
+
+		const topRightTransitionX = Math.round(maxX * 0.75);
+		const rightReachable = new Set(
+			(glyphsByColumn.get(topRightTransitionX) ?? [])
+				.filter((glyph) => downReachable.has(pointKey(glyph)))
+				.map(pointKey),
+		);
+		for (let x = topRightTransitionX - 1; x >= 0; x -= 1) {
+			for (const glyph of glyphsByColumn.get(x) ?? []) {
+				if ([-1, 0, 1].some((offset) => rightReachable.has(`${x + 1},${glyph.y + offset}`))) {
+					rightReachable.add(pointKey(glyph));
+				}
+			}
+		}
+
+		const upwardFromStart = new Set(bottomLeftIslandGlyphs.map(pointKey));
+		for (let y = maxY - 1; y >= 0; y -= 1) {
+			for (const glyph of glyphsByRow.get(y) ?? []) {
+				if ([-1, 0, 1].some((offset) => upwardFromStart.has(`${glyph.x + offset},${y + 1}`))) {
+					upwardFromStart.add(pointKey(glyph));
+				}
+			}
+		}
+		const preferredTopTransitionY = Math.round(maxY * 0.12);
+		const topTransitionY = glyphs
+			.filter((glyph) => upwardFromStart.has(pointKey(glyph)) && rightReachable.has(pointKey(glyph)))
+			.map((glyph) => glyph.y)
+			.sort((a, b) => Math.abs(a - preferredTopTransitionY) - Math.abs(b - preferredTopTransitionY))[0];
+		const upReachable = new Set(
+			(glyphsByRow.get(topTransitionY) ?? [])
+				.filter((glyph) => rightReachable.has(pointKey(glyph)) && upwardFromStart.has(pointKey(glyph)))
+				.map(pointKey),
+		);
+		for (let y = topTransitionY + 1; y <= maxY; y += 1) {
+			for (const glyph of glyphsByRow.get(y) ?? []) {
+				if ([-1, 0, 1].some((offset) => upReachable.has(`${glyph.x + offset},${y - 1}`))) {
+					upReachable.add(pointKey(glyph));
+				}
+			}
+		}
+		const cycleStartGlyphs = bottomLeftIslandGlyphs.filter((glyph) => upReachable.has(pointKey(glyph)));
+		const chooseCycleStart = (): Glyph => (
+			cycleStartGlyphs[Math.floor(Math.random() * cycleStartGlyphs.length)] ?? bottomLeft
+		);
+		let cycleStart = chooseCycleStart();
+		const trail = new Map<string, number>();
+		let lightning: LightningGlyph[] = [];
+		let lightningHead: Point = { x: cycleStart.x, y: maxY };
+		let position: Point = { x: cycleStart.x, y: cycleStart.y };
+		let phase: Phase = 'up';
+		let lastStepAt = performance.now();
+		let slashWaitUntil = 0;
+		let slashLanding: Point | null = null;
+		const readWeight = (value: string | undefined): number => {
+			const weight = Number(value);
+			return Number.isFinite(weight) && weight >= 0 ? weight : 1;
+		};
+		const ascentMoveWeights: Array<[number, number]> = [
+			[-1, readWeight(element.dataset.ascentLeftWeight)],
+			[0, readWeight(element.dataset.ascentStraightWeight)],
+			[1, readWeight(element.dataset.ascentRightWeight)],
+		];
+		const topMoveWeights: Array<[number, number]> = [
+			[-1, readWeight(element.dataset.topUpWeight)],
+			[0, readWeight(element.dataset.topStraightWeight)],
+			[1, readWeight(element.dataset.topDownWeight)],
+		];
+		const descentMoveWeights: Array<[number, number]> = [
+			[-1, readWeight(element.dataset.descentLeftWeight)],
+			[0, readWeight(element.dataset.descentStraightWeight)],
+			[1, readWeight(element.dataset.descentRightWeight)],
+		];
+
+		function pickWeighted(options: WeightedGlyph[]): Glyph | undefined {
+			const enabled = options.filter((option) => option.weight > 0);
+			const pool = enabled.length > 0 ? enabled : options;
+			const totalWeight = pool.reduce((total, option) => total + (enabled.length > 0 ? option.weight : 1), 0);
+			let choice = Math.random() * totalWeight;
+			for (const option of pool) {
+				choice -= enabled.length > 0 ? option.weight : 1;
+				if (choice <= 0) return option.glyph;
+			}
+			return pool.at(-1)?.glyph;
+		}
+
+		function glyphAt(x: number, y: number): Glyph | undefined {
+			return glyphGrid.get(`${x},${y}`);
+		}
+
+		function moveTo(glyph: Glyph): void {
+			position = { x: glyph.x, y: glyph.y };
+		}
+
+		function rememberHit(now: number): void {
+			const key = `${position.x},${position.y}`;
+			if (glyphGrid.has(key)) trail.set(key, now);
+		}
+
+		function beginLightning(x: number, now: number): void {
+			phase = 'lightning';
+			lightning = [];
+			cycleStart = chooseCycleStart();
+			lightningHead = { x, y: position.y };
+			addLightningGlyph(now);
+		}
+
+		function addLightningGlyph(now: number): void {
+			const character = LIGHTNING_GLYPHS[Math.floor(Math.random() * LIGHTNING_GLYPHS.length)];
+			lightning.push({
+				...lightningHead,
+				code: character.codePointAt(0) ?? 42,
+				createdAt: now,
+				rotation: (Math.random() - 0.5) * Math.PI,
+				scaleX: 0.6 + Math.random() * 1.15,
+				scaleY: 0.7 + Math.random() * 0.9,
+			});
+		}
+
+		function prepareSlashJump(now: number): void {
+			if (glyphAt(position.x, position.y)?.character !== '/') return;
+
+			let slashCount = 0;
+			let landing: Glyph | undefined;
+			for (let y = position.y; y <= maxY; y += 1) {
+				const glyph = glyphAt(position.x, y);
+				if (glyph?.character === '/') {
+					slashCount += 1;
+					continue;
+				}
+				if (glyph) {
+					landing = glyph;
+					break;
+				}
+			}
+
+			if (!landing || slashCount === 0 || !downReachable.has(pointKey(landing))) return;
+			slashLanding = { x: landing.x, y: landing.y };
+			slashWaitUntil = now + slashCount * TICK_MS;
+		}
+
+		function advance(now: number): void {
+			if (slashLanding !== null) {
+				if (now < slashWaitUntil) return;
+				position = slashLanding;
+				slashLanding = null;
+				if (position.y >= maxY) phase = 'bottom';
+				rememberHit(now);
+				return;
+			}
+
+			switch (phase) {
+				case 'up': {
+					const targetY = position.y - 1;
+					const candidates: WeightedGlyph[] = [];
+					for (const [offset, weight] of ascentMoveWeights) {
+						const glyph = glyphAt(position.x + offset, targetY);
+						if (glyph && upReachable.has(pointKey(glyph))) candidates.push({ glyph, weight });
+					}
+					const next = pickWeighted(candidates);
+					if (next) moveTo(next);
+					if (position.y <= topTransitionY) {
+						phase = 'right';
+					}
+					break;
+				}
+				case 'right': {
+					const targetX = position.x + 1;
+					const candidates: WeightedGlyph[] = [];
+					for (const [offset, weight] of topMoveWeights) {
+						const glyph = glyphAt(targetX, position.y + offset);
+						if (glyph && rightReachable.has(pointKey(glyph))) candidates.push({ glyph, weight });
+					}
+					const next = pickWeighted(candidates);
+					if (next) moveTo(next);
+					if (position.x >= topRightTransitionX) {
+						phase = 'down';
+					}
+					break;
+				}
+				case 'down': {
+					const targetY = position.y + 1;
+					const candidates: WeightedGlyph[] = [];
+					for (const [offset, weight] of descentMoveWeights) {
+						const glyph = glyphAt(position.x + offset, targetY);
+						if (glyph && downReachable.has(pointKey(glyph))) candidates.push({ glyph, weight });
+					}
+					const next = pickWeighted(candidates);
+					if (next) moveTo(next);
+					prepareSlashJump(now);
+					if (position.y >= maxY) phase = 'bottom';
+					break;
+				}
+				case 'bottom': {
+					if (position.x <= cycleStart.x && position.x <= bottomLeftIslandMaxX) {
+						phase = 'up';
+						lightning = [];
+						break;
+					}
+					const targetX = position.x - 1;
+					if (targetX < 0) {
+						position = { x: cycleStart.x, y: cycleStart.y };
+						phase = 'up';
+						lightning = [];
+					} else {
+						const next = glyphAt(targetX, position.y);
+						if (next) moveTo(next);
+						else beginLightning(targetX, now);
+					}
+					break;
+				}
+				case 'lightning': {
+					const targetX = lightningHead.x - 1;
+					const landing = glyphAt(targetX, lightningHead.y);
+					if (landing) {
+						moveTo(landing);
+						phase = 'bottom';
+					} else if (targetX >= 0) {
+						lightningHead.x = targetX;
+						addLightningGlyph(now);
+					} else {
+						position = { x: cycleStart.x, y: cycleStart.y };
+						phase = 'up';
+					}
+					break;
+				}
+			}
+
+			rememberHit(now);
+		}
+
+		function drawLightningGlyph(glyph: LightningGlyph, alpha: number): void {
+			const sourceX = (glyph.code % atlasColumns) * cellSize;
+			const sourceY = Math.floor(glyph.code / atlasColumns) * cellSize;
+			context.save();
+			context.globalAlpha = alpha;
+			context.translate((glyph.x + 0.5) * cellSize, (glyph.y + 0.5) * cellSize);
+			context.rotate(glyph.rotation);
+			context.scale(glyph.scaleX, glyph.scaleY);
+			context.drawImage(
+				accentAtlas,
+				sourceX,
+				sourceY,
+				cellSize,
+				cellSize,
+				-cellSize / 2,
+				-cellSize / 2,
+				cellSize,
+				cellSize,
+			);
+			context.restore();
+		}
+
+		function renderFrame(now: number): void {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			for (const glyph of glyphs) {
+				drawGlyph(baseAtlas, glyph.code, glyph.x, glyph.y);
+				const hitAt = trail.get(`${glyph.x},${glyph.y}`);
+				if (hitAt === undefined) continue;
+				const age = now - hitAt;
+				if (age >= TRAIL_DURATION_MS) {
+					trail.delete(`${glyph.x},${glyph.y}`);
+					continue;
+				}
+				context.globalAlpha = Math.pow(1 - age / TRAIL_DURATION_MS, 1.65);
+				drawGlyph(accentAtlas, glyph.code, glyph.x, glyph.y);
+				context.globalAlpha = 1;
+			}
+
+			if (phase !== 'lightning') {
+				drawGlyph(accentAtlas, 64, position.x, position.y);
+			}
+
+			for (const glyph of lightning) {
+				const alpha = Math.max(0, 1 - (now - glyph.createdAt) / (TICK_MS * 4));
+				if (alpha > 0) drawLightningGlyph(glyph, alpha);
+			}
+		}
+
+		function animate(now: number): void {
+			if (!element.isConnected) return;
+			const stepDuration = phase === 'bottom' || phase === 'lightning' ? FAST_TICK_MS : TICK_MS;
+			if (now - lastStepAt >= stepDuration) {
+				advance(now);
+				lastStepAt = now;
+			}
+			renderFrame(now);
+			requestAnimationFrame(animate);
+		}
+
+		rememberHit(lastStepAt);
+		requestAnimationFrame(animate);
 	}
 
 	function initializeAllAsciiCanvases(): void {
