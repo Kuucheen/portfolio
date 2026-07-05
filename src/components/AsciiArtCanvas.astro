@@ -7,6 +7,7 @@ interface Props {
 	cellSize?: number;
 	atlasColumns?: number;
 	animated?: boolean;
+	fullWidth?: boolean;
 	ascentWeights?: Partial<{ left: number; straight: number; right: number }>;
 	topWeights?: Partial<{ up: number; straight: number; down: number }>;
 	descentWeights?: Partial<{ left: number; straight: number; right: number }>;
@@ -20,6 +21,7 @@ const {
 	cellSize = 16,
 	atlasColumns = 16,
 	animated = false,
+	fullWidth = false,
 	ascentWeights = {},
 	topWeights = {},
 	descentWeights = {},
@@ -57,7 +59,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 
 <figure
 	id={id}
-	class="ascii-canvas"
+	class:list={['ascii-canvas', { 'ascii-canvas--full-width': fullWidth }]}
 	data-ascii-canvas
 	data-atlas-src={atlasSrc}
 	data-cell-size={cellSize}
@@ -65,6 +67,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 	data-offset-x={offsetX}
 	data-offset-y={offsetY}
 	data-animated={animated}
+	data-full-width={fullWidth}
 	data-ascent-left-weight={resolvedAscentWeights.left}
 	data-ascent-straight-weight={resolvedAscentWeights.straight}
 	data-ascent-right-weight={resolvedAscentWeights.right}
@@ -106,6 +109,16 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		scaleY: number;
 	}
 
+	interface StarGlyph extends Point {
+		code: number;
+		scale: number;
+		maxOpacity: number;
+		cycleDuration: number;
+		cycleOffset: number;
+		flickerPeriod: number;
+		flickerOffset: number;
+	}
+
 	interface WeightedGlyph {
 		glyph: Glyph;
 		weight: number;
@@ -117,6 +130,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 	const FAST_TICK_MS = TICK_MS / 2;
 	const TRAIL_DURATION_MS = TICK_MS * 9;
 	const LIGHTNING_GLYPHS = ['/','\\','|','-','+','*'];
+	const STAR_GLYPHS = ['.', "'", '`', ',', ':'];
 
 	function loadImage(src: string): Promise<HTMLImageElement> {
 		return new Promise((resolve, reject) => {
@@ -177,7 +191,15 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		const atlasColumns = Number(element.dataset.atlasColumns ?? 16);
 		const offsetX = Number(element.dataset.offsetX ?? 0);
 		const offsetY = Number(element.dataset.offsetY ?? 0);
+		const fullWidth = element.dataset.fullWidth === 'true';
 		if (!atlasSrc) return;
+
+		const artColumns = Math.floor(canvas.width / cellSize);
+		if (fullWidth && element.clientWidth > canvas.width) {
+			canvas.width = Math.ceil(element.clientWidth / cellSize) * cellSize;
+		}
+		const canvasColumns = Math.floor(canvas.width / cellSize);
+		const artOffsetX = Math.floor((canvasColumns - artColumns) / 2);
 
 		let art: string;
 		try {
@@ -208,7 +230,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 
 				const code = character.codePointAt(0);
 				if (code !== undefined && code <= 255) {
-					const glyph = { code, character, x: x - offsetX, y: y - offsetY };
+					const glyph = { code, character, x: x - offsetX + artOffsetX, y: y - offsetY };
 					glyphs.push(glyph);
 					glyphGrid.set(`${glyph.x},${glyph.y}`, glyph);
 				}
@@ -255,26 +277,144 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		const styles = getComputedStyle(element);
 		const baseColor = styles.getPropertyValue('--text-white').trim() || '#ffffff';
 		const accentColor = styles.getPropertyValue('--accent-blue-dark').trim() || '#2832a5';
+		const starRedColor = styles.getPropertyValue('--accent').trim() || '#d4473d';
 		const baseAtlas = makeTintedAtlas(baseColor);
 		const accentAtlas = makeTintedAtlas(accentColor);
+		const starRedAtlas = makeTintedAtlas(starRedColor);
+		const shouldAnimate = element.dataset.animated === 'true';
+		const columns = canvasColumns;
+		const rows = Math.floor(canvas.height / cellSize);
 
-		function renderStatic(): void {
+		function makeRandom(seed: number): () => number {
+			return () => {
+				seed += 0x6D2B79F5;
+				let value = seed;
+				value = Math.imul(value ^ (value >>> 15), value | 1);
+				value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+				return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+			};
+		}
+
+		function createStars(): StarGlyph[] {
+			const random = makeRandom((columns * 73856093) ^ (rows * 19349663) ^ glyphs.length);
+			const candidates: Point[] = [];
+
+			for (let y = 0; y < rows; y += 1) {
+				for (let x = 0; x < columns; x += 1) {
+					if (glyphGrid.has(`${x},${y}`)) continue;
+					const touchesArtwork = [-1, 0, 1].some((offsetY) =>
+						[-1, 0, 1].some((offsetX) => glyphGrid.has(`${x + offsetX},${y + offsetY}`)),
+					);
+					if (!touchesArtwork) candidates.push({ x, y });
+				}
+			}
+
+			for (let index = candidates.length - 1; index > 0; index -= 1) {
+				const swapIndex = Math.floor(random() * (index + 1));
+				[candidates[index], candidates[swapIndex]] = [candidates[swapIndex], candidates[index]];
+			}
+
+			const targetCount = Math.max(7, Math.round((columns * rows) / 70));
+			const chosen: Point[] = [];
+			for (const candidate of candidates) {
+				const hasRoom = chosen.every(
+					(star) => Math.max(Math.abs(star.x - candidate.x), Math.abs(star.y - candidate.y)) >= 3,
+				);
+				if (!hasRoom) continue;
+				chosen.push(candidate);
+				if (chosen.length >= targetCount) break;
+			}
+
+			return chosen.map((point, index) => ({
+				...point,
+				code: STAR_GLYPHS[index % STAR_GLYPHS.length].codePointAt(0) ?? 46,
+				scale: 0.28 + random() * 0.22,
+				maxOpacity: 0.48 + random() * 0.38,
+				cycleDuration: 8000 + random() * 9000,
+				cycleOffset: random() * 17000,
+				flickerPeriod: 180 + random() * 260,
+				flickerOffset: random() * 1000,
+			}));
+		}
+
+		const stars = shouldAnimate ? createStars() : [];
+
+		function drawScaledGlyph(
+			atlasImage: HTMLCanvasElement,
+			code: number,
+			x: number,
+			y: number,
+			scale: number,
+			alpha: number,
+		): void {
+			const sourceX = (code % atlasColumns) * cellSize;
+			const sourceY = Math.floor(code / atlasColumns) * cellSize;
+			const size = cellSize * scale;
+			context.save();
+			context.globalAlpha = alpha;
+			context.drawImage(
+				atlasImage,
+				sourceX,
+				sourceY,
+				cellSize,
+				cellSize,
+				(x + 0.5) * cellSize - size / 2,
+				(y + 0.5) * cellSize - size / 2,
+				size,
+				size,
+			);
+			context.restore();
+		}
+
+		function renderStars(now: number, staticFrame = false): void {
+			for (const star of stars) {
+				if (staticFrame) {
+					drawScaledGlyph(baseAtlas, star.code, star.x, star.y, star.scale, star.maxOpacity * 0.5);
+					continue;
+				}
+
+				const cycleProgress = ((now + star.cycleOffset) % star.cycleDuration) / star.cycleDuration;
+				const fade = Math.sin(Math.PI * cycleProgress) ** 2;
+				const flickerWave = Math.max(
+					0,
+					Math.sin(((now + star.flickerOffset) / star.flickerPeriod) * Math.PI * 2),
+				);
+				const redFlicker = flickerWave ** 14;
+				const alpha = fade * star.maxOpacity;
+
+				drawScaledGlyph(
+					baseAtlas,
+					star.code,
+					star.x,
+					star.y,
+					star.scale,
+					alpha * (1 - redFlicker * 0.7),
+				);
+				drawScaledGlyph(
+					starRedAtlas,
+					star.code,
+					star.x,
+					star.y,
+					star.scale,
+					alpha * redFlicker,
+				);
+			}
+		}
+
+		function renderStatic(includeStars = false): void {
 			context.clearRect(0, 0, canvas.width, canvas.height);
+			if (includeStars) renderStars(0, true);
 			for (const glyph of glyphs) {
 				drawGlyph(baseAtlas, glyph.code, glyph.x, glyph.y);
 			}
 		}
 
-		const shouldAnimate = element.dataset.animated === 'true';
 		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		if (!shouldAnimate || reducedMotion || canvas.width === 0 || canvas.height === 0) {
-			renderStatic();
+			renderStatic(shouldAnimate);
 			return;
 		}
 
-		const columns = Math.floor(canvas.width / cellSize);
-		const rows = Math.floor(canvas.height / cellSize);
-		const maxX = columns - 1;
 		const maxY = rows - 1;
 		const glyphsByRow = new Map<number, Glyph[]>();
 		const glyphsByColumn = new Map<number, Glyph[]>();
@@ -316,7 +456,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 			}
 		}
 
-		const topRightTransitionX = Math.round(maxX * 0.75);
+		const topRightTransitionX = artOffsetX + Math.round((artColumns - 1) * 0.75);
 		const rightReachable = new Set(
 			(glyphsByColumn.get(topRightTransitionX) ?? [])
 				.filter((glyph) => downReachable.has(pointKey(glyph)))
@@ -514,7 +654,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 						break;
 					}
 					const targetX = position.x - 1;
-					if (targetX < 0) {
+					if (targetX < artOffsetX) {
 						position = { x: cycleStart.x, y: cycleStart.y };
 						phase = 'up';
 						lightning = [];
@@ -531,7 +671,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 					if (landing) {
 						moveTo(landing);
 						phase = 'bottom';
-					} else if (targetX >= 0) {
+					} else if (targetX >= artOffsetX) {
 						lightningHead.x = targetX;
 						addLightningGlyph(now);
 					} else {
@@ -569,6 +709,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 
 		function renderFrame(now: number): void {
 			context.clearRect(0, 0, canvas.width, canvas.height);
+			renderStars(now);
 			for (const glyph of glyphs) {
 				drawGlyph(baseAtlas, glyph.code, glyph.x, glyph.y);
 				const hitAt = trail.get(`${glyph.x},${glyph.y}`);
@@ -624,6 +765,15 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		max-width: 100%;
 		margin: 0 auto;
 		overflow: auto hidden;
+	}
+
+	.ascii-canvas--full-width {
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.ascii-canvas--full-width canvas {
+		width: 100%;
 	}
 
 	canvas {
