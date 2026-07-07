@@ -3,19 +3,21 @@
   https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
   License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
  */
+@import url('https://fonts.googleapis.com/css2?family=Sixtyfour&display=swap');
 @import "tailwindcss";
 
 @theme inline {
 	--color-accent: var(--accent);
 }
 @theme inline {
-	--font-display: var(--font-cooper);
+	--font-cooper: var(--font-cooper);
+	--font-sixtyfour: var(--font-sixtyfour-family);
 }
 
 :root {
-	--accent: #ff3c47;
+	--accent: #ef0512;
 	--accent-dark: #a5282f;
-	--accent-blue-dark: #2832a5;
+	--accent-blue-dark: #0102fe;
 	--black: 15, 18, 25;
 	--gray: #1b1b15;
 	--gray-light: #5c5b5b;
@@ -23,6 +25,8 @@
 	--pure-white: #ffffff;
 	--text-white: #f1eee9;
 	--text-white-secondary: #d3d0cd;
+	--font-sixtyfour: var(--font-sixtyfour-family);
+	--font-sixtyfour-family: "Sixtyfour", system-ui, sans-serif;
 	--box-shadow:
 			0 2px 6px var(--gray), 0 8px 24px var(--gray),
 			0 16px 32px var(--gray);
