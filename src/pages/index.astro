@@ -3,8 +3,54 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import AsciiArtCanvas from '../components/AsciiArtCanvas.astro';
+import ProjectCard from '../components/ProjectCard.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import artwork from '../assets/ascii/ear.txt?raw';
+
+const projects = [
+	{
+		title: 'KC-Checker',
+		description: 'Advanced open-source proxy checker written in Go',
+		imageSrc:
+			'https://repository-images.githubusercontent.com/719058370/b008aa88-4d44-44b8-ac09-2cd884413f26',
+		imageAlt: 'KC-Checker project preview',
+		href: 'https://github.com/kuucheen/KC-Checker',
+		tags: [
+			{ label: 'Proxies', color: 'primary' },
+		],
+	},
+	{
+		title: 'KC-Scraper',
+		description: 'A powerful open-source proxy scraper ',
+		imageSrc:
+			'https://repository-images.githubusercontent.com/519901963/08c37937-1ba2-45b4-822c-56ddf59d7b96',
+		imageAlt: 'KC-Scraper project preview',
+		href: 'https://github.com/kuucheen/KC-Scraper',
+		tags: [{ label: 'Proxies', color: 'primary' }],
+	},
+	{
+		title: 'Magpie',
+		description: 'Magpie is a multi-user AIO Proxy Manager ',
+		imageSrc:
+			'https://repository-images.githubusercontent.com/889902532/0c845a2c-2659-4ba5-80ba-87a5adb086c6',
+		imageAlt: 'Magpie project preview',
+		href: 'https://github.com/Kuucheen/magpie',
+		tags: [
+			{ label: 'Proxies', color: 'primary' },
+		],
+	},
+	// {
+	// 	title: 'gif-to-plymouth',
+	// 	description: 'Turn any animated GIF into a Linux Plymouth boot splash theme.  ',
+	// 	imageSrc:
+	// 		'plymouth',
+	// 	imageAlt: 'gif-to-plymouth project preview',
+	// 	href: 'https://github.com/Kuucheen/gif-to-plymouth',
+	// 	tags: [
+	// 		{ label: 'Tool', color: 'success' },
+	// 	],
+	// },
+];
 ---
 
 <!doctype html>
@@ -41,6 +87,21 @@ import artwork from '../assets/ascii/ear.txt?raw';
 				padding-block: 5rem;
 			}
 
+			.projects {
+				width: min(760px, calc(100vw - 2rem));
+				margin-inline: 50%;
+				transform: translateX(-50%);
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 1rem;
+			}
+
+			@media (max-width: 820px) {
+				.projects {
+					grid-template-columns: 1fr;
+				}
+			}
+
 			:global(body.home-page > header) {
 				position: absolute;
 				inset: 0 0 auto;
@@ -50,6 +111,7 @@ import artwork from '../assets/ascii/ear.txt?raw';
 			}
 
 		</style>
+		<title>kuchen</title>
 	</head>
 	<body class="home-page">
 		<Header />
@@ -85,7 +147,22 @@ import artwork from '../assets/ascii/ear.txt?raw';
 			</section>
 			<div class="content">
 
-				<h2 class="text-center">My projects</h2>
+				<h2 class="text-center pb-10">My projects</h2>
+
+				<div class="projects">
+					{
+						projects.map((project) => (
+							<ProjectCard
+								title={project.title}
+								description={project.description}
+								imageSrc={project.imageSrc}
+								imageAlt={project.imageAlt}
+								href={project.href}
+								tags={project.tags}
+							/>
+						))
+					}
+				</div>
 
 				<p>
 					Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template

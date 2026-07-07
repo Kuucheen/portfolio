@@ -1,0 +1,144 @@
+---
+type TagColor =
+	| 'primary'
+	| 'secondary'
+	| 'accent'
+	| 'neutral'
+	| 'info'
+	| 'success'
+	| 'warning'
+	| 'error';
+
+type ProjectTag =
+	| string
+	| {
+			label: string;
+			color?: TagColor;
+	  };
+
+interface Props {
+	title: string;
+	description: string;
+	imageSrc: string;
+	imageAlt: string;
+	href?: string;
+	tags?: ProjectTag[];
+	class?: string;
+}
+
+const {
+	title,
+	description,
+	imageSrc,
+	imageAlt,
+	href,
+	tags = [],
+	class: className = '',
+} = Astro.props;
+
+const badgeColors: Record<TagColor, string> = {
+	primary: 'badge-primary',
+	secondary: 'badge-secondary',
+	accent: 'badge-accent',
+	neutral: 'badge-neutral',
+	info: 'badge-info',
+	success: 'badge-success',
+	warning: 'badge-warning',
+	error: 'badge-error',
+};
+
+const getTagLabel = (tag: ProjectTag) => (typeof tag === 'string' ? tag : tag.label);
+const getTagColorClass = (tag: ProjectTag) =>
+	typeof tag === 'string' ? badgeColors.primary : badgeColors[tag.color ?? 'primary'];
+---
+
+{
+	href ? (
+		<a
+			class:list={['card project-card bg-zinc-900 w-full overflow-hidden', className]}
+			href={href}
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			<figure class="project-card-image">
+				<img src={imageSrc} alt={imageAlt} />
+			</figure>
+			<div class="card-body project-card-body">
+				<h2 class="card-title flex-wrap">
+					{title}
+					{
+						tags.map((tag) => (
+							<span class:list={['badge badge-soft', getTagColorClass(tag)]}>
+								{getTagLabel(tag)}
+							</span>
+						))
+					}
+				</h2>
+				<p>{description}</p>
+			</div>
+		</a>
+	) : (
+		<article class:list={['card project-card bg-zinc-900 w-full overflow-hidden', className]}>
+			<figure class="project-card-image">
+				<img src={imageSrc} alt={imageAlt} />
+			</figure>
+			<div class="card-body project-card-body">
+				<h2 class="card-title flex-wrap">
+					{title}
+					{
+						tags.map((tag) => (
+							<span class:list={['badge badge-soft', getTagColorClass(tag)]}>
+								{getTagLabel(tag)}
+							</span>
+						))
+					}
+				</h2>
+				<p>{description}</p>
+			</div>
+		</article>
+	)
+}
+
+<style>
+	.project-card {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.project-card:hover,
+	.project-card:visited {
+		color: inherit;
+	}
+
+	.project-card:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+
+	.project-card-image {
+		background: #18181b;
+		height: clamp(7.5rem, 14vw, 10rem);
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.project-card-image img {
+		width: 100%;
+		height: auto;
+	}
+
+	.project-card-body {
+		padding: 1rem;
+		gap: 0.35rem;
+	}
+
+	.project-card-body :global(.card-title) {
+		font-size: 1rem;
+	}
+
+	.project-card-body p {
+		margin: 0;
+		font-size: 0.9rem;
+		line-height: 1.45;
+	}
+</style>
