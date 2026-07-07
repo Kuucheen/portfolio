@@ -5,7 +5,6 @@ import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
 import FallbackImage from '../assets/blog-placeholder-1.jpg';
 import { SITE_TITLE } from '../consts';
-import { Font } from 'astro:assets';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -54,6 +53,12 @@ const { title, description, image = FallbackImage } = Astro.props;
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+	href="https://fonts.googleapis.com/css2?family=Aldrich&family=Outfit:wght@100..900&display=swap"
+	rel="stylesheet"
+/>
 <link rel="icon" type="image/svg+xml" href={faviconHref} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link
@@ -63,9 +68,6 @@ const { title, description, image = FallbackImage } = Astro.props;
 	href={new URL('rss.xml', Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
-
-<Font cssVariable="--font-atkinson" preload={true}/>
-<Font cssVariable="--font-cooper" />
 
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />

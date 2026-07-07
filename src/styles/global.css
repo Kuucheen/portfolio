@@ -10,8 +10,9 @@
 	--color-accent: var(--accent);
 }
 @theme inline {
-	--font-cooper: var(--font-cooper);
 	--font-sixtyfour: var(--font-sixtyfour-family);
+	--font-aldrich: var(--font-aldrich-family);
+	--font-outfit: var(--font-outfit-family);
 }
 
 :root {
@@ -27,6 +28,10 @@
 	--text-white-secondary: #d3d0cd;
 	--font-sixtyfour: var(--font-sixtyfour-family);
 	--font-sixtyfour-family: "Sixtyfour", system-ui, sans-serif;
+	--font-aldrich: var(--font-aldrich-family);
+	--font-aldrich-family: "Aldrich", system-ui, sans-serif;
+	--font-outfit: var(--font-outfit-family);
+	--font-outfit-family: "Outfit", system-ui, sans-serif;
 	--box-shadow:
 			0 2px 6px var(--gray), 0 8px 24px var(--gray),
 			0 16px 32px var(--gray);
@@ -38,7 +43,7 @@ html {
 	min-height: 100%;
 }
 body {
-	font-family: var(--font-atkinson);
+	font-family: var(--font-outfit), serif;
 	margin: 0;
 	padding: 0;
 	text-align: left;
