@@ -1,0 +1,262 @@
+---
+interface Props {
+	userId: string;
+}
+
+const { userId } = Astro.props;
+const endpoint = `https://api.lanyard.rest/v1/users/${userId}`;
+---
+
+<section class="discord-status" data-discord-status data-endpoint={endpoint}>
+	<div class="discord-status__body">
+		<div class="discord-status__avatar-wrap">
+			<img
+				class="discord-status__avatar"
+				data-discord-avatar
+				src={`https://cdn.discordapp.com/embed/avatars/0.png`}
+				alt=""
+			/>
+			<span class="discord-status__dot is-offline" data-discord-dot></span>
+		</div>
+		<div class="discord-status__content">
+			<div class="discord-status__name-row">
+				<h2 data-discord-display-name>Discord profile</h2>
+				<span class="discord-status__badge" data-discord-badge hidden></span>
+			</div>
+			<div class="discord-status__presence-row">
+				<span class="discord-status__presence-dot is-offline" data-discord-presence-dot></span>
+				<span class="discord-status__presence is-offline" data-discord-status-label>Loading</span>
+			</div>
+			<p class="discord-status__activity" data-discord-activity hidden></p>
+		</div>
+	</div>
+</section>
+
+<script>
+	const statusLabels = {
+		online: 'Online',
+		idle: 'Idle',
+		dnd: 'Do not disturb',
+		offline: 'Offline',
+	};
+
+	const activityPrefixes = {
+		0: 'Playing',
+		2: 'Listening to',
+		3: 'Watching',
+		5: 'Competing in',
+	};
+
+	const getAvatarUrl = (user) => {
+		if (!user?.avatar) return 'https://cdn.discordapp.com/embed/avatars/0.png';
+		const extension = user.avatar.startsWith('a_') ? 'gif' : 'png';
+		return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${extension}?size=128`;
+	};
+
+	const formatActivity = (data) => {
+		if (data.listening_to_spotify && data.spotify) {
+			return `Listening to ${data.spotify.song} by ${data.spotify.artist}`;
+		}
+
+		const activity = data.activities?.find((item) => item.type !== 4) ?? data.activities?.[0];
+		if (!activity) return '';
+
+		if (activity.type === 4) return activity.state ?? activity.name ?? '';
+
+		const prefix = activityPrefixes[activity.type] ?? 'Active in';
+		return `${prefix} ${activity.name}`;
+	};
+
+	const renderDiscordStatus = (root, payload) => {
+		const data = payload?.data;
+		if (!payload?.success || !data) throw new Error('Missing Discord presence data');
+
+		const user = data.discord_user;
+		const status = data.discord_status ?? 'offline';
+		const displayName = user.global_name || user.display_name || user.username;
+
+		root.querySelector('[data-discord-avatar]').src = getAvatarUrl(user);
+		root.querySelector('[data-discord-avatar]').alt = `${displayName}'s Discord avatar`;
+		root.querySelector('[data-discord-display-name]').textContent = displayName;
+
+		const dot = root.querySelector('[data-discord-dot]');
+		dot.className = `discord-status__dot is-${status}`;
+
+		const presenceDot = root.querySelector('[data-discord-presence-dot]');
+		presenceDot.className = `discord-status__presence-dot is-${status}`;
+
+		const statusLabel = root.querySelector('[data-discord-status-label]');
+		statusLabel.textContent = statusLabels[status] ?? status;
+		statusLabel.className = `discord-status__presence is-${status}`;
+
+		const activityText = formatActivity(data);
+		const activityEl = root.querySelector('[data-discord-activity]');
+		activityEl.hidden = !activityText;
+		activityEl.textContent = activityText;
+	};
+
+	const loadDiscordStatus = async (root) => {
+		const response = await fetch(root.dataset.endpoint, { cache: 'no-store' });
+		if (!response.ok) throw new Error('Discord presence request failed');
+		renderDiscordStatus(root, await response.json());
+	};
+
+	document.querySelectorAll('[data-discord-status]').forEach((root) => {
+		loadDiscordStatus(root).catch(() => {
+			root.querySelector('[data-discord-status-label]').textContent = 'Unavailable';
+		});
+
+		window.setInterval(() => {
+			loadDiscordStatus(root).catch(() => {});
+		}, 60_000);
+	});
+</script>
+
+<style>
+	.discord-status {
+		width: 100%;
+		border: 1px solid #3a3a3d;
+		border-radius: 0.875rem;
+		background: #242424;
+		color: var(--text-white);
+		box-shadow: 0 14px 34px rgb(0 0 0 / 0.22);
+	}
+
+	.discord-status__body {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.85rem;
+	}
+
+	.discord-status__avatar-wrap {
+		position: relative;
+		width: 5.75rem;
+		height: 5.75rem;
+	}
+
+	.discord-status__avatar {
+		width: 100%;
+		height: 100%;
+		border: 2px solid #23a55a;
+		border-radius: 0.55rem;
+		background: #232428;
+		object-fit: cover;
+	}
+
+	.discord-status__dot {
+		position: absolute;
+		left: 0;
+		top: 0.55rem;
+		width: 0.8rem;
+		height: 0.8rem;
+		border-radius: 50%;
+		background: #80848e;
+	}
+
+	.discord-status__dot.is-online,
+	.discord-status__presence-dot.is-online,
+	.discord-status__presence.is-online {
+		--presence-color: #23a55a;
+	}
+
+	.discord-status__dot.is-idle,
+	.discord-status__presence-dot.is-idle,
+	.discord-status__presence.is-idle {
+		--presence-color: #f0b232;
+	}
+
+	.discord-status__dot.is-dnd,
+	.discord-status__presence-dot.is-dnd,
+	.discord-status__presence.is-dnd {
+		--presence-color: #f23f43;
+	}
+
+	.discord-status__dot.is-offline,
+	.discord-status__presence-dot.is-offline,
+	.discord-status__presence.is-offline {
+		--presence-color: #80848e;
+	}
+
+	.discord-status__dot,
+	.discord-status__presence-dot {
+		background: var(--presence-color);
+	}
+
+	.discord-status__content {
+		min-width: 0;
+	}
+
+	.discord-status__name-row {
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 0.65rem;
+	}
+
+	.discord-status__name-row h2 {
+		margin: 0;
+		overflow: hidden;
+		color: var(--text-white);
+		font-size: 1.15rem;
+		font-weight: 800;
+		line-height: 1.1;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.discord-status__badge {
+		border: 1px solid rgb(255 255 255 / 0.12);
+		border-radius: 999px;
+		background: #2d2d30;
+		padding: 0.08rem 0.38rem;
+		color: var(--text-white);
+		font-size: 0.7rem;
+		font-weight: 800;
+		text-transform: uppercase;
+	}
+
+	.discord-status__presence-row {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin-top: 0.35rem;
+	}
+
+	.discord-status__presence-dot {
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 50%;
+	}
+
+	.discord-status__presence {
+		flex: none;
+		color: var(--presence-color);
+		font-size: 0.92rem;
+		font-weight: 500;
+	}
+
+	.discord-status__activity {
+		margin: 0.55rem 0 0;
+		color: var(--text-white);
+		font-size: 0.9rem;
+		line-height: 1.35;
+	}
+
+	@media (max-width: 420px) {
+		.discord-status__body {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+
+		.discord-status__avatar-wrap {
+			width: 5.5rem;
+			height: 5.5rem;
+		}
+
+		.discord-status__name-row {
+			flex-wrap: wrap;
+		}
+	}
+</style>

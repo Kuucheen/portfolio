@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import AsciiArtCanvas from '../components/AsciiArtCanvas.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import DiscordStatus from '../components/DiscordStatus.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import artwork from '../assets/ascii/ear.txt?raw';
 
@@ -96,8 +97,21 @@ const projects = [
 				gap: 1rem;
 			}
 
+			.profile-section {
+				width: min(760px, calc(100vw - 2rem));
+				margin: 3rem 50% 0;
+				transform: translateX(-50%);
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+				gap: 1.5rem;
+			}
+
 			@media (max-width: 820px) {
 				.projects {
+					grid-template-columns: 1fr;
+				}
+
+				.profile-section {
 					grid-template-columns: 1fr;
 				}
 			}
@@ -147,9 +161,9 @@ const projects = [
 			</section>
 			<div class="content">
 
-				<h2 class="text-center pb-10">My projects</h2>
+				<h2 class="text-center pb-10">my projects</h2>
 
-				<div class="projects">
+				<div class="projects pb-10">
 					{
 						projects.map((project) => (
 							<ProjectCard
@@ -164,35 +178,16 @@ const projects = [
 					}
 				</div>
 
-				<p>
-					Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-					serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-					website, blog, or portfolio with Astro.
-				</p>
-				<p>
-					This template comes with a few integrations already configured in your
-					<code>astro.config.mjs</code> file. You can customize your setup with
-					<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-					React, or Vue to your project.
-				</p>
-				<p>Here are a few ideas on how to get started with the template:</p>
-				<ul>
-					<li>Edit this page in <code>src/pages/index.astro</code></li>
-					<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-					<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-					<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-					<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-				</ul>
-				<p>
-					Have fun! If you get stuck, remember to
-					<a href="https://docs.astro.build/">read the docs</a>
-					or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-				</p>
-				<p>
-					Looking for a blog template with a bit more personality? Check out
-					<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-					by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-				</p>
+				<h2 class="text-center pb-2 pt-10">contact me</h2>
+
+				<section class="profile-section items-center" aria-label="Profile">
+					<div class="profile-copy min-h-px self-center leading-3">
+						<p>email: <a href="mailto:xkuchen@proton.me">xkuchen@proton.me</a></p>
+						<p>discord: <a href="https://discord.com/users/1124269498631983114" target="_blank" rel="noopener noreferrer">@kuucheen</a></p>
+					</div>
+					<DiscordStatus userId="1124269498631983114" />
+				</section>
+
 			</div>
 		</main>
 		<Footer />
