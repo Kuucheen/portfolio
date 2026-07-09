@@ -5,6 +5,7 @@ import Header from '../components/Header.astro';
 import AsciiArtCanvas from '../components/AsciiArtCanvas.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import DiscordStatus from '../components/DiscordStatus.astro';
+import CopyButton from '../components/CopyButton.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import artwork from '../assets/ascii/ear.txt?raw';
 
@@ -182,8 +183,16 @@ const projects = [
 
 				<section class="profile-section items-center" aria-label="Profile">
 					<div class="profile-copy min-h-px self-center leading-3">
-						<p>email: <a href="mailto:xkuchen@proton.me">xkuchen@proton.me</a></p>
-						<p>discord: <a href="https://discord.com/users/1124269498631983114" target="_blank" rel="noopener noreferrer">@kuucheen</a></p>
+						<p class="mb-2 flex items-center gap-2">
+							<span>email:</span>
+							<a href="mailto:xkuchen@proton.me">xkuchen@proton.me</a>
+							<CopyButton value="xkuchen@proton.me" label="Copy email address" />
+						</p>
+						<p class="mb-0 flex items-center gap-2">
+							<span>discord:</span>
+							<a href="https://discord.com/users/1124269498631983114" target="_blank" rel="noopener noreferrer">@kuucheen</a>
+							<CopyButton value="@kuucheen" label="Copy Discord username" />
+						</p>
 					</div>
 					<DiscordStatus userId="1124269498631983114" />
 				</section>
