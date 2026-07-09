@@ -97,15 +97,38 @@ const endpoint = `https://api.lanyard.rest/v1/users/${userId}`;
 		renderDiscordStatus(root, await response.json());
 	};
 
-	document.querySelectorAll('[data-discord-status]').forEach((root) => {
-		loadDiscordStatus(root).catch(() => {
-			root.querySelector('[data-discord-status-label]').textContent = 'Unavailable';
-		});
+	const statusIntervals = new WeakMap();
 
-		window.setInterval(() => {
-			loadDiscordStatus(root).catch(() => {});
-		}, 60_000);
-	});
+	const setupDiscordStatuses = () => {
+		document.querySelectorAll('[data-discord-status]').forEach((root) => {
+			if (root.dataset.discordReady === 'true') return;
+
+			root.dataset.discordReady = 'true';
+
+			loadDiscordStatus(root).catch(() => {
+				root.querySelector('[data-discord-status-label]').textContent = 'Unavailable';
+			});
+
+			const intervalId = window.setInterval(() => {
+				loadDiscordStatus(root).catch(() => {});
+			}, 60_000);
+
+			statusIntervals.set(root, intervalId);
+		});
+	};
+
+	const cleanupDiscordStatuses = () => {
+		document.querySelectorAll('[data-discord-status]').forEach((root) => {
+			const intervalId = statusIntervals.get(root);
+			if (intervalId) window.clearInterval(intervalId);
+			statusIntervals.delete(root);
+			delete root.dataset.discordReady;
+		});
+	};
+
+	setupDiscordStatuses();
+	document.addEventListener('astro:page-load', setupDiscordStatuses);
+	document.addEventListener('astro:before-swap', cleanupDiscordStatuses);
 </script>
 
 <style>
