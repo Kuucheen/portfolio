@@ -16,7 +16,6 @@ const endpoint = `https://api.lanyard.rest/v1/users/${userId}`;
 				src={`https://cdn.discordapp.com/embed/avatars/0.png`}
 				alt=""
 			/>
-			<span class="discord-status__dot is-offline" data-discord-dot></span>
 		</div>
 		<div class="discord-status__content">
 			<div class="discord-status__name-row">
@@ -78,9 +77,6 @@ const endpoint = `https://api.lanyard.rest/v1/users/${userId}`;
 		root.querySelector('[data-discord-avatar]').src = getAvatarUrl(user);
 		root.querySelector('[data-discord-avatar]').alt = `${displayName}'s Discord avatar`;
 		root.querySelector('[data-discord-display-name]').textContent = displayName;
-
-		const dot = root.querySelector('[data-discord-dot]');
-		dot.className = `discord-status__dot is-${status}`;
 
 		const presenceDot = root.querySelector('[data-discord-presence-dot]');
 		presenceDot.className = `discord-status__presence-dot is-${status}`;
@@ -145,41 +141,26 @@ const endpoint = `https://api.lanyard.rest/v1/users/${userId}`;
 		object-fit: cover;
 	}
 
-	.discord-status__dot {
-		position: absolute;
-		left: 0;
-		top: 0.55rem;
-		width: 0.8rem;
-		height: 0.8rem;
-		border-radius: 50%;
-		background: #80848e;
-	}
-
-	.discord-status__dot.is-online,
 	.discord-status__presence-dot.is-online,
 	.discord-status__presence.is-online {
 		--presence-color: #23a55a;
 	}
 
-	.discord-status__dot.is-idle,
 	.discord-status__presence-dot.is-idle,
 	.discord-status__presence.is-idle {
 		--presence-color: #f0b232;
 	}
 
-	.discord-status__dot.is-dnd,
 	.discord-status__presence-dot.is-dnd,
 	.discord-status__presence.is-dnd {
 		--presence-color: #f23f43;
 	}
 
-	.discord-status__dot.is-offline,
 	.discord-status__presence-dot.is-offline,
 	.discord-status__presence.is-offline {
 		--presence-color: #80848e;
 	}
 
-	.discord-status__dot,
 	.discord-status__presence-dot {
 		background: var(--presence-color);
 	}
