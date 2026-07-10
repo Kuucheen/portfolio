@@ -1,53 +1,99 @@
 ---
+import { SITE_TITLE } from '../consts';
+import { createBrandMarkSvg, getPageAccent } from '../brand';
+
 const today = new Date();
+const logoSvg = createBrandMarkSvg(getPageAccent(Astro.url.pathname), {
+	className: 'logo-mark',
+	width: 84,
+	height: 45,
+});
+const socialLinkClasses =
+	'group grid size-10 place-items-center rounded-[0.625rem] border border-white/10 bg-white/[0.04] text-[var(--text-white)] transition-colors duration-150 hover:border-accent hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-accent';
 ---
 
-<footer class="text-sm">
-	&copy; {today.getFullYear()} Kuchen. All rights reserved.
-	<div class="social-links">
-		<a href="https://discord.gg/7FWAGXzhkC" target="_blank" rel="noopener noreferrer">
-			<span class="sr-only">Join the community discord server</span>
-			<svg viewBox="0 0 24 24" aria-hidden="true" width="32" height="32" astro-icon="social/discord">
-				<path
-					fill="currentColor"
-					d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.991 13.991 0 0 0-.608 1.25 18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.125-.094.249-.19.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
-				></path>
-			</svg>
+<footer class="w-full border-t border-white/10 bg-(--gray-primary) text-(--text-white)">
+	<div
+		class="footer mx-auto w-full max-w-5xl px-6 py-10 sm:footer-horizontal sm:items-start sm:justify-between sm:px-8"
+	>
+		<aside class="gap-4">
+		<a
+			class="inline-flex rounded-[0.625rem] p-2 transition-colors duration-150 hover:bg-white/6 focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-accent"
+			href="/"
+			aria-label={`${SITE_TITLE} home`}
+		>
+			<span
+				class="block h-11.25 w-21 [&_.logo-mark]:block [&_.logo-mark]:size-full [&_.logo-mark]:shrink-0"
+				set:html={logoSvg}
+			></span>
 		</a>
-		<a href="https://github.com/kuucheen" target="_blank">
-			<span class="sr-only">Go to Kuucheen's GitHub repo</span>
-			<svg viewBox="0 0 16 16" aria-hidden="true" width="32" height="32" astro-icon="social/github"
-				><path
-					fill="currentColor"
-					d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-				></path></svg
+		<p class="m-0 text-[0.9rem] leading-[1.6] text-(--text-white-secondary)">
+			<strong class="font-aldrich text-base text-(--text-white)">{SITE_TITLE}</strong>
+			<!--<br />-->
+			<!--Projects, writing, and ways to get in touch.-->
+			<br />
+			<span class="text-[0.8rem]">&copy; {today.getFullYear()} Kuchen. All rights reserved.</span>
+		</p>
+	</aside>
+
+		<nav class="justify-self-start sm:justify-self-end" aria-label="Social links">
+		<h2
+			class="footer-title m-0 font-aldrich text-[0.75rem]! tracking-[0.08em] text-(--text-white-secondary)"
+		>
+			Social
+		</h2>
+		<div class="grid grid-flow-col gap-3">
+			<a
+				class={socialLinkClasses}
+				href="https://github.com/kuucheen"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Kuucheen on GitHub"
 			>
-		</a>
+				<svg
+					class="size-[1.35rem] text-(--text-white) transition-colors duration-150 group-hover:text-accent"
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+				>
+					<path
+						fill="currentColor"
+						d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.75 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z"
+					></path>
+				</svg>
+			</a>
+
+			<a
+				class={socialLinkClasses}
+				href="https://discord.com/users/1124269498631983114"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Kuucheen on Discord"
+			>
+				<svg
+					class="size-[1.35rem] text-(--text-white) transition-colors duration-150 group-hover:text-accent"
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+				>
+					<path
+						fill="currentColor"
+						d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.08.08 0 0 0-.08.04c-.21.38-.46.88-.61 1.25a18.3 18.3 0 0 0-5.48 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06c0 .02.01.04.03.05a19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .09-.03c.46-.63.87-1.3 1.22-1.99a.08.08 0 0 0-.04-.1c-.65-.25-1.27-.55-1.87-.9a.08.08 0 0 1-.01-.12l.37-.3a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.3a.08.08 0 0 1-.01.12c-.59.35-1.21.65-1.87.9a.08.08 0 0 0-.04.1c.36.7.77 1.37 1.23 2a.08.08 0 0 0 .08.02 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.05c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.98 0c-1.18 0-2.16-1.09-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.17 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+					></path>
+				</svg>
+			</a>
+
+			<a class={socialLinkClasses} href="mailto:xkuchen@proton.me" aria-label="Email Kuchen">
+				<svg
+					class="size-[1.35rem] text-(--text-white) transition-colors duration-150 group-hover:text-accent"
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+				>
+					<path
+						fill="currentColor"
+						d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"
+					></path>
+				</svg>
+			</a>
+		</div>
+	</nav>
 	</div>
 </footer>
-<style>
-	footer {
-		padding: 2em 1em 6em 1em;
-		background: var(--gray-primary);
-		color: var(--text-white);
-		text-align: center;
-	}
-	.social-links {
-		display: flex;
-		justify-content: center;
-		gap: 1em;
-		margin-top: 1em;
-	}
-	.social-links a {
-		text-decoration: none;
-		color: var(--accent);
-	}
-	.social-links a:hover {
-		color: var(--accent-dark);
-	}
-	.social-links svg {
-		display: block;
-		width: 2rem;
-		height: 2rem;
-	}
-</style>
