@@ -1,27 +1,187 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
 
+interface Website {
+	name: string;
+	url: string;
+	favicon: string;
+}
+
+interface WebsiteGroup {
+	name: string;
+	description: string;
+	websites: Website[];
+}
+
+// Add a group here, then add websites to its `websites` array.
+const websiteGroups: WebsiteGroup[] = [
+	{
+		name: 'World Monitors',
+		description:
+			'Live events, conflicts, situational awareness, satellite imagery, and natural hazards worldwide.',
+		websites: [
+            {
+                name: 'OSIRIS',
+                url: 'https://osirisai.live',
+                favicon: 'https://osirisai.live/favicon.ico',
+            },
+			{
+				name: 'Conflictly',
+				url: 'https://www.conflictly.app/dashboard',
+				favicon: 'https://www.conflictly.app/icons/icon-48x48.png',
+			},
+			{
+				name: 'Monitor the Situation',
+				url: 'https://monitor-the-situation.com/western-europe',
+				favicon: 'https://monitor-the-situation.com/favicon-48x48.png',
+			},
+			{
+				name: 'Polymarket Monitoring',
+				url: 'https://glint.trade/terminal',
+				favicon: 'https://glint.trade/favicon.svg',
+			},
+			{
+				name: 'World Monitor',
+				url: 'https://www.worldmonitor.app',
+				favicon: 'https://www.google.com/s2/favicons?domain=worldmonitor.app&sz=64',
+			},
+			{
+				name: 'liveuamap',
+				url: 'https://liveuamap.com/',
+				favicon: 'https://liveuamap.com/images/favicon.png',
+			},
+			{
+				name: 'World Imagery Wayback',
+				url: 'https://livingatlas.arcgis.com/wayback',
+				favicon: 'https://livingatlas.arcgis.com/wayback/esri-favicon-light-32.png',
+			},
+			{
+				name: 'Live Wildfires',
+				url: 'https://firms.modaps.eosdis.nasa.gov/map',
+				favicon: 'https://firms.modaps.eosdis.nasa.gov/images/touch/icon-192x192.png',
+			},
+
+		],
+	},
+	{
+		name: 'Email search',
+		description: 'Look up email addresses, domains, reputation, and known data breaches.',
+		websites: [
+			{
+				name: 'Hunter',
+				url: 'https://hunter.io/',
+				favicon: 'https://hunter.io/favicon.ico',
+			},
+			{
+				name: 'Have I Been Pwned',
+				url: 'https://haveibeenpwned.com/',
+				favicon: 'https://haveibeenpwned.com/favicon.ico',
+			},
+			{
+				name: 'Epieos',
+				url: 'https://epieos.com/',
+				favicon: 'https://www.google.com/s2/favicons?domain=epieos.com&sz=64',
+			},
+		],
+	},
+];
+
+const getHostname = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 ---
 
 <!doctype html>
 <html lang="en">
-<head>
-    <BaseHead
-            title={`OSINT | ${SITE_TITLE}`}
-            description={SITE_DESCRIPTION}
-    />
-</head>
+	<head>
+		<BaseHead
+			title={`OSINT | ${SITE_TITLE}`}
+			description="A grouped collection of useful OSINT websites and research tools."
+		/>
+	</head>
 
-<body>
-<Header />
+	<body>
+		<Header />
 
-<main>
-    <h1>OSINT</h1>
-</main>
+		<main class="w-full! max-w-5xl! px-4! py-12! sm:px-6! sm:py-16!">
+			<header class="mb-12 max-w-2xl">
+				<p class="mb-3 font-aldrich text-sm font-semibold tracking-[0.16em] text-accent uppercase">
+					OSINT directory
+				</p>
+				<!--<h1 class="mb-4! text-4xl! font-bold tracking-tight sm:text-5xl!">Useful websites</h1>-->
+				<p class="m-0 text-base leading-7 text-(--text-white-secondary) sm:text-lg">
+					A list of useful websites that are not necessarily OSINT tools, packed into groups
+					for quick access.
+				</p>
+			</header>
 
-<Footer />
-</body>
+			<div class="grid gap-12">
+				{
+					websiteGroups.map((group) => (
+						<section aria-labelledby={`group-${group.name.toLowerCase().replaceAll(' ', '-')}`}>
+							<div class="mb-5">
+								<h2
+									id={`group-${group.name.toLowerCase().replaceAll(' ', '-')}`}
+									class="mb-1! text-2xl! font-semibold"
+								>
+									{group.name}
+								</h2>
+								<p class="m-0 text-sm leading-6 text-(--text-white-secondary) sm:text-base">
+									{group.description}
+								</p>
+							</div>
+
+							<ul class="grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+								{group.websites.map((website) => (
+									<li>
+										<a
+											class="card group h-full border border-white/10 bg-white/4 text-(--text-white)! shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-accent/70 hover:bg-white/[0.07] hover:text-(--text-white)! focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+											href={website.url}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<div class="card-body flex-row items-center gap-4 p-4">
+												<span class="grid size-11 shrink-0 place-items-center rounded-xl border border-white/10 p-2">
+													<img
+														class="size-7 rounded-sm object-contain"
+														src={website.favicon}
+														alt=""
+													width="28"
+													height="28"
+													loading="lazy"
+													referrerpolicy="no-referrer"
+												/>
+												</span>
+
+												<span class="min-w-0 flex-1">
+													<span class="block truncate text-base font-semibold">{website.name}</span>
+													<span class="block truncate text-xs text-(--text-white-secondary)">
+														{getHostname(website.url)}
+													</span>
+												</span>
+
+												<svg
+													class="size-4 shrink-0 text-(--text-white-secondary) transition group-hover:text-accent"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="2"
+													aria-hidden="true"
+												>
+													<path d="M7 17 17 7M7 7h10v10" />
+												</svg>
+											</div>
+										</a>
+									</li>
+								))}
+							</ul>
+						</section>
+					))
+				}
+			</div>
+		</main>
+
+		<Footer />
+	</body>
 </html>
