@@ -54,6 +54,16 @@ const websiteGroups: WebsiteGroup[] = [
 				favicon: 'https://liveuamap.com/images/favicon.png',
 			},
 			{
+				name: 'High Quality Satellites Images',
+				url: 'https://satellites.pro/',
+				favicon: 'https://api.google-maps.pro/favicon.ico'
+			},
+			{
+				name: 'Mapillary',
+				url: 'https://www.mapillary.com/app/',
+				favicon: 'https://www.google.com/s2/favicons?domain=mapillary.com&sz=64'
+			},
+			{
 				name: 'World Imagery Wayback',
 				url: 'https://livingatlas.arcgis.com/wayback',
 				favicon: 'https://livingatlas.arcgis.com/wayback/esri-favicon-light-32.png',
@@ -63,30 +73,97 @@ const websiteGroups: WebsiteGroup[] = [
 				url: 'https://firms.modaps.eosdis.nasa.gov/map',
 				favicon: 'https://firms.modaps.eosdis.nasa.gov/images/touch/icon-192x192.png',
 			},
+			{
+				name: 'Radio Garden',
+				url: 'https://radio.garden/',
+				favicon: 'https://radio.garden/icons/favicon.png'
+			},
+			{
+				name: 'Thingful Sensors',
+				url: 'https://thingful.net/',
+				favicon: 'https://thingful.net/favicon-96x96.png'
+			}
 
 		],
 	},
 	{
-		name: 'Email search',
-		description: 'Look up email addresses, domains, reputation, and known data breaches.',
+		name: 'Privacy',
+		description: 'Privacy guides and tools',
 		websites: [
 			{
-				name: 'Hunter',
-				url: 'https://hunter.io/',
-				favicon: 'https://hunter.io/favicon.ico',
+				name: 'Privacy Guides',
+				url: 'https://www.privacyguides.org/en/',
+				favicon: 'https://www.privacyguides.org/en/assets/brand/logos/png/favicon-32x32.png'
 			},
 			{
-				name: 'Have I Been Pwned',
-				url: 'https://haveibeenpwned.com/',
-				favicon: 'https://haveibeenpwned.com/favicon.ico',
+				name: 'Inteltechniques',
+				url: 'https://inteltechniques.com/links.html',
+				favicon: 'https://www.google.com/s2/favicons?domain=inteltechniques.com&sz=64'
 			},
 			{
-				name: 'Epieos',
-				url: 'https://epieos.com/',
-				favicon: 'https://www.google.com/s2/favicons?domain=epieos.com&sz=64',
+				name: 'Surveillance Self-Defense',
+				url: 'https://ssd.eff.org/',
+				favicon: 'https://ssd.eff.org/favicon.ico'
 			},
-		],
+			{
+				name: 'Privsec',
+				url: 'https://privsec.dev/tags/',
+				favicon: 'https://privsec.dev/apple-touch-icon.png'
+			},
+		]
 	},
+	{
+		name: 'Website analysis',
+		description: 'Check a websites security, safety, dependencies and more.',
+		websites: [
+			{
+				name: 'Web-Check',
+				url: 'https://web-check.xyz/',
+				favicon: 'https://web-check.xyz/favicon.svg'
+			},
+			{
+				name: 'Shodan',
+				url: 'https://shodan.io/',
+				favicon: 'https://www.shodan.io/static/img/favicon-60c1b1cd.png'
+			},
+			{
+				name: 'Censys',
+				url: 'https://search.censys.io/',
+				favicon: 'https://search.censys.io/static/img/apple-touch-icon.png'
+			},
+			{
+				name: 'Odin',
+				url: 'https://search.odin.io/',
+				favicon: 'https://search.odin.io/favicon.ico'
+			},
+			{
+				name: 'Leakix',
+				url: 'https://leakix.net/',
+				favicon: 'https://leakix.net/public/img/favicon/apple-touch-icon.png'
+			},
+			{
+				name: 'DNS Dumpster',
+				url: 'https://dnsdumpster.com/',
+				favicon: 'https://www.google.com/s2/favicons?domain=dnsdumpster.com&sz=64'
+			},
+		]
+	},
+	// {
+	// 	name: 'Email search',
+	// 	description: 'Look up email addresses, domains, reputation, and known data breaches.',
+	// 	websites: [
+	// 		{
+	// 			name: 'Have I Been Pwned',
+	// 			url: 'https://haveibeenpwned.com/',
+	// 			favicon: 'https://haveibeenpwned.com/favicon.ico',
+	// 		},
+	// 		{
+	// 			name: 'Epieos',
+	// 			url: 'https://epieos.com/',
+	// 			favicon: 'https://www.google.com/s2/favicons?domain=epieos.com&sz=64',
+	// 		},
+	// 	],
+	// },
 ];
 
 const getHostname = (url: string) => new URL(url).hostname.replace(/^www\./, '');
@@ -97,7 +174,7 @@ const getHostname = (url: string) => new URL(url).hostname.replace(/^www\./, '')
 	<head>
 		<BaseHead
 			title={`OSINT | ${SITE_TITLE}`}
-			description="A grouped collection of useful OSINT websites and research tools."
+			description="A grouped collection of useful osint websites and research tools."
 		/>
 	</head>
 
@@ -111,7 +188,7 @@ const getHostname = (url: string) => new URL(url).hostname.replace(/^www\./, '')
 				</p>
 				<!--<h1 class="mb-4! text-4xl! font-bold tracking-tight sm:text-5xl!">Useful websites</h1>-->
 				<p class="m-0 text-base leading-7 text-(--text-white-secondary) sm:text-lg">
-					A list of useful websites that are not necessarily OSINT tools, packed into groups
+					A list of useful websites that are not necessarily osint tools, packed into groups
 					for quick access.
 				</p>
 			</header>
