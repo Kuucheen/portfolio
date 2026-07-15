@@ -2,8 +2,13 @@
 import { SITE_TITLE } from '../consts';
 import { createBrandMarkSvg, getPageAccent } from '../brand';
 
+interface Props {
+	accent?: string;
+}
+
+const { accent: accentOverride } = Astro.props;
 const today = new Date();
-const logoSvg = createBrandMarkSvg(getPageAccent(Astro.url.pathname), {
+const logoSvg = createBrandMarkSvg(accentOverride ?? getPageAccent(Astro.url.pathname), {
 	className: 'logo-mark',
 	width: 84,
 	height: 45,

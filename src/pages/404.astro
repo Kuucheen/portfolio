@@ -3,15 +3,17 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import AsciiArtCanvas from '../components/AsciiArtCanvas.astro';
+import { getPageAccent } from '../brand';
 
 const pageTitle = '404 — Page not found | kuchen.dev';
 const pageDescription = 'The page you were looking for could not be found.';
+const accent = getPageAccent('/404');
 ---
 
 <!doctype html>
 <html lang="en" class="min-h-full">
 	<head>
-		<BaseHead title={pageTitle} description={pageDescription} />
+		<BaseHead title={pageTitle} description={pageDescription} accent={accent} />
 		<meta name="robots" content="noindex" />
 	</head>
 	<body class="flex min-h-screen flex-col overflow-x-hidden">
@@ -71,6 +73,6 @@ const pageDescription = 'The page you were looking for could not be found.';
 			</section>
 		</main>
 
-		<Footer />
+		<Footer accent={accent} />
 	</body>
 </html>

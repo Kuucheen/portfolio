@@ -11,15 +11,15 @@ interface Props {
 	title: string;
 	description: string;
 	image?: ImageMetadata;
+	accent?: string;
 }
 
+const { title, description, image = FallbackImage, accent: accentOverride } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const accent = getPageAccent(Astro.url.pathname);
+const accent = accentOverride ?? getPageAccent(Astro.url.pathname);
 const faviconSvg = createBrandMarkSvg(accent);
 const faviconHref = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`;
 const themeStyle = `html:root{--accent:${accent}}html{background-color:var(--gray-primary)}`;
-
-const { title, description, image = FallbackImage } = Astro.props;
 ---
 
 <meta name="color-scheme" content="dark" />
