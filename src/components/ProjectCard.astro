@@ -55,13 +55,22 @@ const getTagColorClass = (tag: ProjectTag) =>
 {
 	href ? (
 		<a
-			class:list={['card project-card bg-zinc-900 w-full overflow-hidden', className]}
+			class:list={[
+				'card project-card group w-full overflow-hidden bg-zinc-900 transition-[translate,box-shadow] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-1 hover:shadow-xl focus-visible:-translate-y-1 motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0 motion-reduce:transition-none',
+				className,
+			]}
 			href={href}
 			target="_blank"
 			rel="noopener noreferrer"
 		>
-			<figure class="project-card-image">
+			<figure class="project-card-image relative">
 				<img src={imageSrc} alt={imageAlt} />
+				<span
+					class="absolute top-3 right-3 grid size-8 place-items-center text-base text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+					aria-hidden="true"
+				>
+					↗
+				</span>
 			</figure>
 			<div class="card-body project-card-body">
 				<h2 class="card-title flex-wrap">
