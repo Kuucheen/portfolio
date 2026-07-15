@@ -17,7 +17,9 @@ const hasNotes = Astro.slots.has('default');
 <details>
 	<summary class="cursor-pointer">Level {level}</summary>
 	<div class="mt-2">
-		<div>Link: <a href={href}>{normalizedPath}</a></div>
+		<div>
+			Link: <a href={href} target="_blank" rel="noopener noreferrer">{normalizedPath}</a>
+		</div>
 		{
 			hasNotes && (
 				<div class="my-2">
