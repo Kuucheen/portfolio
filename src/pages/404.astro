@@ -1,0 +1,76 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import AsciiArtCanvas from '../components/AsciiArtCanvas.astro';
+
+const pageTitle = '404 — Page not found | kuchen.dev';
+const pageDescription = 'The page you were looking for could not be found.';
+---
+
+<!doctype html>
+<html lang="en" class="min-h-full">
+	<head>
+		<BaseHead title={pageTitle} description={pageDescription} />
+		<meta name="robots" content="noindex" />
+	</head>
+	<body class="flex min-h-screen flex-col overflow-x-hidden">
+		<Header />
+
+		<main class="relative isolate m-0! flex w-full! max-w-none! flex-1 items-center justify-center overflow-hidden px-6 py-16 sm:px-8">
+			<div class="pointer-events-none absolute inset-0 -z-10 grid place-items-center overflow-hidden opacity-[0.28]" aria-hidden="true">
+				<AsciiArtCanvas
+					art=""
+					atlasSrc="/fonts/cp437_16x16.png"
+					label=""
+					animated
+					fullWidth
+					starField
+				/>
+			</div>
+
+			<section class="w-full max-w-md" aria-labelledby="not-found-title">
+				<h1 id="not-found-title" class="sr-only">Page not found</h1>
+
+				<div class="relative w-full">
+					<div class="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-3 shadow-2xl shadow-black/30 backdrop-blur-sm">
+						<div class="flex items-center justify-between border-b border-white/10 px-2 pb-3 font-aldrich text-[0.62rem] tracking-[0.16em] text-(--text-white-secondary) uppercase">
+							<span>route_check.log</span>
+							<span class="flex items-center gap-2 text-accent">
+								<span class="size-1.5 rounded-full bg-accent"></span>
+								Not found
+							</span>
+						</div>
+
+						<div class="relative grid min-h-72 place-items-center overflow-hidden rounded-b-xl">
+							<div class="absolute inset-0 opacity-20 [background:repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(255,255,255,.08)_4px)]"></div>
+
+							<p class="m-0! font-sixtyfour text-[clamp(4.5rem,18vw,8rem)] leading-none font-medium tracking-[-0.16em] text-(--text-white)">
+								4<span class="text-accent">0</span>4
+							</p>
+
+							<span class="absolute top-5 left-5 size-3 border-t border-l border-accent" aria-hidden="true"></span>
+							<span class="absolute top-5 right-5 size-3 border-t border-r border-accent" aria-hidden="true"></span>
+							<span class="absolute bottom-5 left-5 size-3 border-b border-l border-accent" aria-hidden="true"></span>
+							<span class="absolute right-5 bottom-5 size-3 border-r border-b border-accent" aria-hidden="true"></span>
+						</div>
+
+						<div class="grid grid-cols-[auto_1fr] gap-x-4 border-t border-white/10 px-2 pt-3 font-mono text-[0.68rem] leading-5">
+							<span class="text-(--text-white-secondary)">STATUS</span>
+							<span class="text-accent">NO_MATCHING_ROUTE</span>
+							<span class="text-(--text-white-secondary)">ACTION</span>
+							<a
+								class="w-fit text-(--text-white)! underline decoration-transparent underline-offset-4 transition-colors hover:text-accent! hover:decoration-accent focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+								href="/"
+							>
+								RETURN_TO_HOME
+							</a>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<Footer />
+	</body>
+</html>

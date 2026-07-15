@@ -8,6 +8,9 @@ interface Props {
 	atlasColumns?: number;
 	animated?: boolean;
 	fullWidth?: boolean;
+	starField?: boolean;
+	starFieldColumns?: number;
+	starFieldRows?: number;
 	ascentWeights?: Partial<{ left: number; straight: number; right: number }>;
 	topWeights?: Partial<{ up: number; straight: number; down: number }>;
 	descentWeights?: Partial<{ left: number; straight: number; right: number }>;
@@ -22,6 +25,9 @@ const {
 	atlasColumns = 16,
 	animated = false,
 	fullWidth = false,
+	starField = false,
+	starFieldColumns = 80,
+	starFieldRows = 44,
 	ascentWeights = {},
 	topWeights = {},
 	descentWeights = {},
@@ -53,8 +59,8 @@ for (let y = 0; y < lines.length; y += 1) {
 const hasVisibleGlyphs = Number.isFinite(minX);
 const offsetX = hasVisibleGlyphs ? minX : 0;
 const offsetY = hasVisibleGlyphs ? minY : 0;
-const columns = hasVisibleGlyphs ? maxX - minX + 1 : 0;
-const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
+const columns = starField ? starFieldColumns : hasVisibleGlyphs ? maxX - minX + 1 : 0;
+const rows = starField ? starFieldRows : hasVisibleGlyphs ? maxY - minY + 1 : 0;
 ---
 
 <figure
@@ -68,6 +74,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 	data-offset-y={offsetY}
 	data-animated={animated}
 	data-full-width={fullWidth}
+	data-star-field={starField}
 	data-ascent-left-weight={resolvedAscentWeights.left}
 	data-ascent-straight-weight={resolvedAscentWeights.straight}
 	data-ascent-right-weight={resolvedAscentWeights.right}
@@ -192,6 +199,7 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		const offsetX = Number(element.dataset.offsetX ?? 0);
 		const offsetY = Number(element.dataset.offsetY ?? 0);
 		const fullWidth = element.dataset.fullWidth === 'true';
+		const starField = element.dataset.starField === 'true';
 		if (!atlasSrc) return;
 
 		const artColumns = Math.floor(canvas.width / cellSize);
@@ -412,6 +420,18 @@ const rows = hasVisibleGlyphs ? maxY - minY + 1 : 0;
 		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		if (!shouldAnimate || reducedMotion || canvas.width === 0 || canvas.height === 0) {
 			renderStatic(shouldAnimate);
+			return;
+		}
+
+		if (starField) {
+			function animateStarField(now: number): void {
+				if (!element.isConnected) return;
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				renderStars(now);
+				requestAnimationFrame(animateStarField);
+			}
+
+			requestAnimationFrame(animateStarField);
 			return;
 		}
 
