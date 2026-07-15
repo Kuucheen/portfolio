@@ -1,0 +1,45 @@
+---
+interface Props {
+	/** The level number or label shown in the outer disclosure. */
+	level: number | string;
+	/** The path after https://notpron.com/notpron/. */
+	path: string;
+	/** The text revealed when the spoiler is opened. */
+	solution: string;
+}
+
+const { level, path, solution } = Astro.props;
+const normalizedPath = path.replace(/^\/+/, '');
+const href = `https://notpron.com/notpron/${normalizedPath}`;
+const hasNotes = Astro.slots.has('default');
+---
+
+<details>
+	<summary class="cursor-pointer">Level {level}</summary>
+	<div class="mt-2">
+		<div>Link: <a href={href}>{normalizedPath}</a></div>
+		{
+			hasNotes && (
+				<div class="my-2">
+					<div class="font-semibold">Notes:</div>
+					<div class="mt-1 space-y-2 [&_p]:mb-0">
+						<slot />
+					</div>
+				</div>
+			)
+		}
+		<div class="flex items-baseline gap-1">
+			<span>Solution:</span>
+			<details class="group m-0 inline-block align-middle">
+				<summary
+					class="cursor-pointer list-none rounded bg-black px-1 text-transparent transition-colors select-none group-open:bg-transparent group-open:text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
+				>
+					<span class="sr-only group-open:hidden">Reveal solution for level {level}</span>
+					<span class="sr-only hidden group-open:block">Solution for level {level}: {solution}</span>
+					<span aria-hidden="true">{solution}</span>
+				</summary>
+			</details>
+		</div>
+	</div>
+	<div class="h-2" aria-hidden="true"></div>
+</details>
