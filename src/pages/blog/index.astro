@@ -38,6 +38,8 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 			}
 			ul li:first-child {
 				width: 100%;
+				max-width: 640px;
+				margin-inline: auto;
 				margin-bottom: 1rem;
 				text-align: center;
 			}
@@ -100,7 +102,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 								src={goAlgorithmsImage}
 								alt="Go algorithms"
 							/>
-							<h4 class="title">Go algorithms</h4>
 						</a>
 					</li>
 					{
