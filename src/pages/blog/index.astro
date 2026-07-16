@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
+import AsciiHoverBurst from '../../components/AsciiHoverBurst.astro';
 import AsciiNoiseCanvas from '../../components/AsciiNoiseCanvas.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
@@ -134,7 +135,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 		<main>
 			<section>
 				<ul>
-					<li>
+					<li class="relative">
 						<a href="/blog/algorithms/">
 							<div class="algorithm-preview">
 								<div class="algorithm-art" aria-hidden="true">
@@ -148,6 +149,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 								/>
 							</div>
 						</a>
+						<AsciiHoverBurst />
 					</li>
 					{
 						posts.map((post) => (

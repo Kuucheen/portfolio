@@ -1,0 +1,122 @@
+<div class="ascii-hover-burst" data-ascii-hover-burst aria-hidden="true"></div>
+
+<script>
+	const BURST_GLYPHS = ['0', '1', '.', ':', '+', '*', '/', '\\', '#'];
+
+	function initializeAsciiHoverBurst(container: HTMLElement): void {
+		if (container.dataset.initialized === 'true') return;
+		container.dataset.initialized = 'true';
+
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		const target = container.parentElement?.querySelector<HTMLElement>('.algorithm-preview');
+		if (!target) return;
+
+		function createBurst(): void {
+			container.replaceChildren();
+
+			for (let index = 0; index < 13; index += 1) {
+				const glyph = document.createElement('span');
+				const edge = Math.floor(Math.random() * 4);
+				const edgePosition = 8 + Math.random() * 84;
+				const distance = 24 + Math.random() * 32;
+				const drift = (Math.random() - 0.5) * 26;
+				let x = edgePosition;
+				let y = edgePosition;
+				let moveX = drift;
+				let moveY = drift;
+
+				if (edge === 0) {
+					y = 0;
+					moveY = -distance;
+				} else if (edge === 1) {
+					x = 100;
+					moveX = distance;
+				} else if (edge === 2) {
+					y = 100;
+					moveY = distance;
+				} else {
+					x = 0;
+					moveX = -distance;
+				}
+
+				glyph.className = 'ascii-hover-glyph';
+				glyph.textContent = BURST_GLYPHS[Math.floor(Math.random() * BURST_GLYPHS.length)];
+				glyph.style.setProperty('--glyph-x', `${x}%`);
+				glyph.style.setProperty('--glyph-y', `${y}%`);
+				glyph.style.setProperty('--glyph-move-x', `${moveX}px`);
+				glyph.style.setProperty('--glyph-move-y', `${moveY}px`);
+				glyph.style.setProperty('--glyph-rotate', `${(Math.random() - 0.5) * 80}deg`);
+				glyph.style.setProperty('--glyph-delay', `${Math.random() * 110}ms`);
+				glyph.style.setProperty('--glyph-duration', `${620 + Math.random() * 380}ms`);
+				glyph.style.setProperty('--glyph-opacity', `${0.22 + Math.random() * 0.24}`);
+				if (Math.random() < 0.18) glyph.classList.add('ascii-hover-glyph--accent');
+				container.append(glyph);
+			}
+
+			container.classList.remove('is-active');
+			void container.offsetWidth;
+			container.classList.add('is-active');
+		}
+
+		target.addEventListener('pointerenter', createBurst);
+	}
+
+	function initializeAllAsciiHoverBursts(): void {
+		document
+			.querySelectorAll<HTMLElement>('[data-ascii-hover-burst]')
+			.forEach(initializeAsciiHoverBurst);
+	}
+
+	initializeAllAsciiHoverBursts();
+	document.addEventListener('astro:page-load', initializeAllAsciiHoverBursts);
+</script>
+
+<style is:global>
+	.ascii-hover-burst {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.ascii-hover-glyph {
+		position: absolute;
+		left: var(--glyph-x);
+		top: var(--glyph-y);
+		color: var(--text-white-secondary);
+		font: 700 0.75rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		opacity: 0;
+		will-change: transform, opacity;
+	}
+
+	.ascii-hover-glyph--accent {
+		color: var(--accent);
+	}
+
+	.is-active .ascii-hover-glyph {
+		animation: ascii-burst var(--glyph-duration) ease-out var(--glyph-delay) both;
+	}
+
+	@keyframes ascii-burst {
+		0% {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.75);
+		}
+
+		18% {
+			opacity: var(--glyph-opacity);
+		}
+
+		100% {
+			opacity: 0;
+			transform:
+				translate(
+					calc(-50% + var(--glyph-move-x)),
+					calc(-50% + var(--glyph-move-y))
+				)
+				rotate(var(--glyph-rotate))
+				scale(1.08);
+		}
+	}
+</style>
