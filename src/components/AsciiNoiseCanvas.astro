@@ -1,0 +1,131 @@
+<canvas class="ascii-noise-canvas" data-ascii-noise aria-hidden="true"></canvas>
+
+<script>
+	const GLYPHS = ['.', '.', ':', ':', '+', '=', '*', '#'];
+	const FRAME_INTERVAL = 1000 / 12;
+
+	function initializeAsciiNoise(canvas: HTMLCanvasElement): void {
+		if (canvas.dataset.initialized === 'true') return;
+		canvas.dataset.initialized = 'true';
+
+		const context = canvas.getContext('2d');
+		if (!context) return;
+
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		let width = 0;
+		let height = 0;
+		let columns = 0;
+		let rows = 0;
+		let lastFrameAt = 0;
+		let animationFrame = 0;
+		let visible = true;
+
+		function resize(): void {
+			const bounds = canvas.getBoundingClientRect();
+			const nextWidth = Math.max(1, Math.round(bounds.width));
+			const nextHeight = Math.max(1, Math.round(bounds.height));
+			if (nextWidth === width && nextHeight === height) return;
+
+			width = nextWidth;
+			height = nextHeight;
+			const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+			canvas.width = Math.round(width * pixelRatio);
+			canvas.height = Math.round(height * pixelRatio);
+			context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+			columns = Math.ceil(width / 9);
+			rows = Math.ceil(height / 12);
+		}
+
+		function stableNoise(x: number, y: number): number {
+			const value = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+			return value - Math.floor(value);
+		}
+
+		function draw(now: number): void {
+			resize();
+			context.clearRect(0, 0, width, height);
+
+			const styles = getComputedStyle(canvas);
+			const baseColor = styles.getPropertyValue('--text-white').trim() || '#f1eee9';
+			const accentColor = styles.getPropertyValue('--accent').trim() || '#a201ff';
+			const time = now / 1000;
+			const cellWidth = width / columns;
+			const cellHeight = height / rows;
+			const accentX = columns * (0.5 + Math.sin(time * 0.32) * 0.38);
+			const accentY = rows * (0.5 + Math.cos(time * 0.27) * 0.34);
+
+			context.font = `700 ${Math.max(8, cellHeight * 0.78)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+			context.textAlign = 'center';
+			context.textBaseline = 'middle';
+
+			for (let y = 0; y < rows; y += 1) {
+				for (let x = 0; x < columns; x += 1) {
+					const waveA = Math.sin(x * 0.2 + time * 0.7 + Math.sin(y * 0.12));
+					const waveB = Math.cos(y * 0.28 - time * 0.55 + x * 0.05);
+					const waveC = Math.sin((x + y) * 0.1 + time * 0.38);
+					const density = Math.max(0, Math.min(1, (waveA + waveB + waveC + 3) / 6));
+					const glyphIndex = Math.min(
+						GLYPHS.length - 1,
+						Math.floor((density * 0.86 + stableNoise(x, y) * 0.14) * GLYPHS.length),
+					);
+					const distanceFromAccent = Math.hypot(x - accentX, y - accentY);
+					const isAccent = distanceFromAccent < 2.6 && stableNoise(x + 31, y + 17) > 0.42;
+
+					context.fillStyle = isAccent ? accentColor : baseColor;
+					context.globalAlpha = isAccent ? 0.46 : 0.08 + density * 0.16;
+					context.fillText(
+						GLYPHS[glyphIndex],
+						(x + 0.5) * cellWidth,
+						(y + 0.5) * cellHeight,
+					);
+				}
+			}
+
+			context.globalAlpha = 1;
+		}
+
+		function animate(now: number): void {
+			if (!canvas.isConnected) return;
+			if (visible && now - lastFrameAt >= FRAME_INTERVAL) {
+				draw(now);
+				lastFrameAt = now;
+			}
+			animationFrame = requestAnimationFrame(animate);
+		}
+
+		const resizeObserver = new ResizeObserver(() => draw(reducedMotion ? 0 : performance.now()));
+		resizeObserver.observe(canvas);
+
+		const intersectionObserver = new IntersectionObserver(([entry]) => {
+			visible = entry?.isIntersecting ?? true;
+		});
+		intersectionObserver.observe(canvas);
+
+		if (reducedMotion) {
+			draw(0);
+		} else {
+			animationFrame = requestAnimationFrame(animate);
+		}
+
+		window.addEventListener('astro:before-swap', () => {
+			cancelAnimationFrame(animationFrame);
+			resizeObserver.disconnect();
+			intersectionObserver.disconnect();
+		}, { once: true });
+	}
+
+	function initializeAllAsciiNoise(): void {
+		document.querySelectorAll<HTMLCanvasElement>('[data-ascii-noise]').forEach(initializeAsciiNoise);
+	}
+
+	initializeAllAsciiNoise();
+	document.addEventListener('astro:page-load', initializeAllAsciiNoise);
+</script>
+
+<style>
+	.ascii-noise-canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+</style>
