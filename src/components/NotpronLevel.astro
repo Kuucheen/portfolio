@@ -32,9 +32,9 @@ const hasNotes = Astro.slots.has('default');
 		}
 		<div class="flex items-baseline gap-1">
 			<span>Solution:</span>
-			<details class="group m-0 inline-block align-middle">
+			<details data-one-way-disclosure class="group m-0 inline-block align-middle">
 				<summary
-					class="cursor-pointer list-none rounded bg-black px-1 text-transparent transition-colors select-none group-open:bg-transparent group-open:text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
+					class="cursor-pointer list-none rounded bg-black px-1 text-transparent transition-colors select-none group-open:cursor-text group-open:bg-transparent group-open:text-inherit group-open:select-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
 				>
 					<span class="sr-only group-open:hidden">Reveal solution for level {level}</span>
 					<span class="sr-only hidden group-open:block">Solution for level {level}: {solution}</span>
@@ -45,3 +45,19 @@ const hasNotes = Astro.slots.has('default');
 	</div>
 	<div class="h-2" aria-hidden="true"></div>
 </details>
+
+<script>
+	document.querySelectorAll<HTMLDetailsElement>('details[data-one-way-disclosure]').forEach((disclosure) => {
+		disclosure.querySelector(':scope > summary')?.addEventListener('click', (event) => {
+			if (disclosure.open) event.preventDefault();
+		});
+
+		disclosure.addEventListener('toggle', () => {
+			if (disclosure.open) {
+				disclosure.dataset.revealed = 'true';
+			} else if (disclosure.dataset.revealed === 'true') {
+				disclosure.open = true;
+			}
+		});
+	});
+</script>
