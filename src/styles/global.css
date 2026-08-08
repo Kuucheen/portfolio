@@ -56,6 +56,18 @@ body {
 	line-height: 1.7;
 	min-height: 100vh;
 }
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	pointer-events: none;
+	background-image: url('/noise.svg');
+	background-repeat: repeat;
+	background-size: 160px 160px;
+	mix-blend-mode: soft-light;
+	opacity: 0.03;
+}
 main {
 	width: 720px;
 	max-width: calc(100% - 2em);
@@ -146,6 +158,12 @@ hr {
 	}
 	main {
 		padding: 1em;
+	}
+}
+
+@media print, (prefers-contrast: more), (forced-colors: active) {
+	body::after {
+		display: none;
 	}
 }
 
