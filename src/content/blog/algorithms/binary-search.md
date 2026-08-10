@@ -3,6 +3,7 @@ title: 'Binary search in Go'
 description: 'A test post about finding a value in a sorted slice with binary search.'
 pubDate: 'Jul 16 2026'
 heroImage: '../../../assets/blog-images/blog-placeholder-about.jpg'
+draft: true
 ---
 
 Binary search finds a value in a **sorted** collection by repeatedly cutting the search area in half.

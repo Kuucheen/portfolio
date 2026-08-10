@@ -3,6 +3,7 @@ title: 'Linear search in Go'
 description: 'A simple search that checks each value in a slice from beginning to end.'
 pubDate: 'Jul 15 2026'
 heroImage: '../../../assets/blog-images/blog-placeholder-about.jpg'
+draft: true
 ---
 
 Linear search checks every value in a collection until it finds the target. It works on both sorted and unsorted slices.

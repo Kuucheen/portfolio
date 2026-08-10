@@ -3,6 +3,7 @@ title: 'Bubble sort in Go'
 description: 'A basic sorting algorithm that repeatedly swaps neighboring values.'
 pubDate: 'Jul 14 2026'
 heroImage: '../../../assets/blog-images/blog-placeholder-about.jpg'
+draft: true
 ---
 
 Bubble sort repeatedly compares neighboring values and swaps them when they are in the wrong order. After each pass, the largest remaining value moves to the end.
