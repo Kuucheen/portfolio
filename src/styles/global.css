@@ -135,11 +135,16 @@ code {
 	background-color: var(--gray-light);
 	border-radius: 2px;
 }
-pre {
-	padding: 1.5em;
+.prose pre {
+	width: 100%;
+	padding: 1rem 1.25rem;
+	overflow-x: auto;
+	font-size: 0.875rem;
+	line-height: 1.6;
+	tab-size: 4;
 	border-radius: 8px;
 }
-pre > code {
+.prose pre > code {
 	all: unset;
 }
 blockquote {
