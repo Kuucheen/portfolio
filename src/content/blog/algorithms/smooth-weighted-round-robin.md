@@ -2,7 +2,7 @@
 title: 'Smooth Weighted Round Robin'
 description: 'The smooth weighted round robin is mainly used for load balancing (in network trafficking), but is also perfectly suitable for other tasks that involve weighted distributions.'
 pubDate: 'Aug 08 2026'
-heroImage: '../../../assets/blog-images/blog-placeholder-about.jpg'
+heroImage: '../../../assets/blog-images/smooth-weighted-round-robin.png'
 draft: false
 ---
 
