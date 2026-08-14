@@ -34,7 +34,7 @@ type WeightedObject struct {
 }
 ```
 
-The weight stays constant and only the currentWeight changes frequently because currentWeight keeps track of which element should be chosen next. 
+The weight stays constant and only currentWeight changes frequently because currentWeight keeps track of which element should be chosen next. 
 
 <br />
 Now let's define how many rounds we want and also create our main function, where we initialize our slice with our WeightedObjects in it.
@@ -128,7 +128,7 @@ func main() {
 ```
 
 You can see it's a really simple algorithm. 
-By substracting the total weight of the objects and readding the initial weight to everyone, the biggest weight slowly loses his weight until a smaller weight catches up and becomes the biggest one.
+By subtracting the total weight of the objects and readding the initial weight to everyone, the biggest weight slowly loses his weight until a smaller weight catches up and becomes the biggest one.
 
 
 Thus, this is happening each round:  <br />
